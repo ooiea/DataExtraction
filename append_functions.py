@@ -74,35 +74,40 @@ def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
             Data Frame with information about the given Directory.
         Returns
         -------
-        df_with_drugs_application : pd.DataFrame
+        df_with_drug_application : pd.DataFrame
             Returns a Pandas DataFrame with a new column "Drug application".
         """
 
     #Searching for experiments with "Bicucullin" application
     bic = ["Bicuculline","bicuculline", "Bic", "bic"]
-    pattern_bic = '|'.join(bic)
-    df["Drug application"] = df["Location"].str.contains(pattern_bic)
-    df["Drug application"] = df["Drug application"].map({True: "Bicucullin", False: "Not identified"})
+    #pattern_bic = '|'.join(bic)
+    #df["Drug application"] = df["Location"].str.contains(pattern_bic)
+    #df["Drug application"] = df["Drug application"].map({True: "Bicucullin", False: None})
 
     #Searching for experiments with "PEI"
     pei = ["PEI"]
-    pattern_pei = '|'.join(pei)
+    #pattern_pei = '|'.join(pei)
     # df["Drug application"] = df["Location"].str.contains(pattern_pei)
     # df["Drug application"] = df["Drug application"].replace(to_replace="Not identified", value="PEI", regex=pei)
 
-    list_of_patterns = [bic, pei]
+
+    lsd = ["LSD", "lsd"]
+
+    list_of_patterns = [bic, pei, lsd]
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
 
         pattern = '|'.join(pattern)
         series = df["Location"].str.contains(pattern)
-        series = series.map({True: list_of_patterns[index][0], False: "Not identified"})
+        series = series.map({True: list_of_patterns[index][0], False: None})
         series_list.append(series)
-        #print(series_list)
 
-            #for i, y in enumerate(series_list):
+    series_to_one = series_list[0].combine_first(series_list[1])
 
+    for index in range(len(series_list)-1):
+        series_to_one = series_to_one.combine_first(series_list[index+1])
 
+    print(series_to_one)
 
     return df
 
