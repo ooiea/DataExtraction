@@ -126,7 +126,7 @@ if __name__ == '__main__':
     print(f"Total Number of files {len(list_of_files)}:")
     all_extensions = get_all_extensions_in_directory(list_of_files)
     print(f"All extensions in Working Directory: {all_extensions}")
-    list_of_files = get_list_of_files(norm_path, [".brw"])
+    list_of_files = get_list_of_files(norm_path, [".brw", ".dat"])
     print(f"Number of object {len(list_of_files)}:")
 
     # Write into .csv
@@ -141,6 +141,9 @@ if __name__ == '__main__':
 
     from append_functions import append_df_with_drug_application
     csv_data_frame = append_df_with_drug_application(csv_data_frame)
+
+    from append_functions import copy_files_with_conditions
+    copy_files_with_conditions(csv_data_frame, "C:/Users/Diana/Info_extraction/copy_test")
 
     #from append_functions import append_df_with_labor
     #csv_data_frame = append_df_with_labor(csv_data_frame)

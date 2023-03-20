@@ -155,3 +155,18 @@ def append_df_with_performer(df: pd.DataFrame) -> pd.DataFrame:
     df_with_performer = ["Philipp Steigerwald", "Not identified"]
 
     return df_with_performer
+
+
+def copy_files_with_conditions(df, path):
+    import shutil
+    import os
+    df = df[df["Drug application"] == 'Bicuculline']
+    df = df[df["Recording system"] == "MEA"]
+    df = df[df["Format"] == ".dat"]
+    for row in df.iterrows():
+        original_file_path = row[1]["Location"]
+        file_name = os.path.basename(original_file_path)
+        path_to_copy = os.path.join(path, file_name)
+        new_file_path = os.path.normpath(path_to_copy)
+        shutil.copyfile(original_file_path, new_file_path)
+
