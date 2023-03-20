@@ -84,13 +84,19 @@ def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
     #df["Drug application"] = df["Location"].str.contains(pattern_bic)
     #df["Drug application"] = df["Drug application"].map({True: "Bicucullin", False: None})
 
-    #Searching for experiments with "PEI"
-    pei = ["PEI"]
+    #Searching for experiments with "Carbamazepine"
+    carba = ["Carbamazepine", "carbamazepine", "carba", "Carba"]
 
     # Searching for experiments with "LSD"
     lsd = ["LSD", "lsd"]
 
-    list_of_patterns = [bic, pei, lsd]
+    # Searching for experiments with "Levetiracetam"
+    lev = ["levetiracetam", "Levetiracetam", "lev"]
+
+    # Searching for experiments with "Cisplatin"
+    cisplatin = ["Cisplatin", "cisplatin"]
+
+    list_of_patterns = [bic, carba, lsd, lev, cisplatin]
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
 
@@ -105,6 +111,10 @@ def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
         series_to_one = series_to_one.combine_first(series_list[index+1])
     #print(series_to_one)
 
+
+    list = series_to_one.to_list()
+    df_with_drug_application = pd.DataFrame(list, columns=["Drug application"])
+    df = pd.concat([df, df_with_drug_application], axis=1)
     return df
 
 
