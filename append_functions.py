@@ -86,11 +86,8 @@ def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
 
     #Searching for experiments with "PEI"
     pei = ["PEI"]
-    #pattern_pei = '|'.join(pei)
-    # df["Drug application"] = df["Location"].str.contains(pattern_pei)
-    # df["Drug application"] = df["Drug application"].replace(to_replace="Not identified", value="PEI", regex=pei)
 
-
+    # Searching for experiments with "LSD"
     lsd = ["LSD", "lsd"]
 
     list_of_patterns = [bic, pei, lsd]
@@ -106,8 +103,7 @@ def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
 
     for index in range(len(series_list)-1):
         series_to_one = series_to_one.combine_first(series_list[index+1])
-
-    print(series_to_one)
+    #print(series_to_one)
 
     return df
 
