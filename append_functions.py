@@ -133,11 +133,35 @@ def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
 
     #Searching for experiments from biomems labor
     biomems = ["BioMEMS", "BIOMEMS", "biomems", "Biomems"]
-    pattern_biomems = '|'.join(biomems)
-    df["Labor"] = df["Location"].str.contains(pattern_biomems)
-    df["Labor"] = df["Labor"].map({True: "BioMEMS", False: "Not identified"})
+    #pattern_biomems = '|'.join(biomems)
+    #df["Labor"] = df["Location"].str.contains(pattern_biomems)
+    #df["Labor"] = df["Labor"].map({True: "BioMEMS", False: "Not identified"})
 
+    japan = ["Tokyo", "tokyo", "Tokio", "tokio", "Japan", "japan"]
+
+    gsi = ["GSI", "gsi"]
+
+    france = ["France", "france", "French", "french"]
+
+    list_of_patterns = [biomems, japan, gsi, france]
+    series_list = []
+    for index, pattern in enumerate(list_of_patterns):
+        pattern = '|'.join(pattern)
+        series = df["Location"].str.contains(pattern)
+        series = series.map({True: list_of_patterns[index][0], False: None})
+        series_list.append(series)
+
+    series_to_one = series_list[0].combine_first(series_list[1])
+
+    for index in range(len(series_list) - 1):
+        series_to_one = series_to_one.combine_first(series_list[index + 1])
+    #print(series_to_one)
+
+    list = series_to_one.to_list()
+    df_with_labor = pd.DataFrame(list, columns=["Labor"])
+    df = pd.concat([df, df_with_labor], axis=1)
     return df
+
 
 
 def append_df_with_performer(df: pd.DataFrame) -> pd.DataFrame:
@@ -152,9 +176,43 @@ def append_df_with_performer(df: pd.DataFrame) -> pd.DataFrame:
         df_with_experiment : pd.DataFrame
             Returns a Pandas DataFrame with a new column "Performer".
         """
-    df_with_performer = ["Philipp Steigerwald", "Not identified"]
 
-    return df_with_performer
+
+    ad = ["Andreas Daus", "Daus", "daus"]
+    cn = ["Christoph Nick", "Nick", "nick"]
+    jf = ["Johannes Frieß", "Frieß", "frieß"]
+    mm = ["Margot Mayer", "Mayer", "mayer"]
+    ps = ["Philipp Steigerwald", "steigerwald"]
+    bk = ["Berit Körbitzer", "Körbitzer", "körbitzer"]
+    tk = ["Tim Köhler", "Köhler", "köhler"]
+    sk = ["Steffen Künzinger", "Künziger", "künziger"]
+    pr = ["Pascal Rüde", "Rüde", "rüde"]
+    tkr = ["Tobias Kraus", "Kraus", "kraus"]
+    mc = ["Manuel Ciba", "Ciba", "ciba"]
+    nn = ["Nahid Nafez", "Nafez", "nafez"]
+    os =["Oliver Smolin", "Smolin", "smolin"]
+    eaf = ["Enes Aydin Furkan", "Furkan", "furkan"]
+    mj = ["Melanie Jungblut", "Jungblut"]
+
+    list_of_patterns = [ad, cn, jf, mm, ps, bk, tk, sk, pr, tkr, mc, nn, os, eaf, mj]
+    series_list = []
+    for index, pattern in enumerate(list_of_patterns):
+        pattern = '|'.join(pattern)
+        series = df["Location"].str.contains(pattern)
+        series = series.map({True: list_of_patterns[index][0], False: None})
+        series_list.append(series)
+
+    series_to_one = series_list[0].combine_first(series_list[1])
+
+    for index in range(len(series_list) - 1):
+        series_to_one = series_to_one.combine_first(series_list[index + 1])
+    #print(series_to_one)
+
+    list = series_to_one.to_list()
+    df_with_performer = pd.DataFrame(list, columns=["Performer"])
+    df = pd.concat([df, df_with_performer], axis=1)
+
+    return df
 
 
 def copy_files_with_conditions(df, path):
@@ -169,4 +227,7 @@ def copy_files_with_conditions(df, path):
         path_to_copy = os.path.join(path, file_name)
         new_file_path = os.path.normpath(path_to_copy)
         shutil.copyfile(original_file_path, new_file_path)
+        csv_file_path = os.path.join(path, "info.csv")
+        df.to_csv(csv_file_path)
+
 
