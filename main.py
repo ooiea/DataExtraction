@@ -142,6 +142,9 @@ if __name__ == '__main__':
     from append_functions import append_df_with_drug_application
     csv_data_frame = append_df_with_drug_application(csv_data_frame)
 
+    from append_functions import append_df_with_radiation
+    csv_data_frame = append_df_with_radiation(csv_data_frame)
+
     #from append_functions import copy_files_with_conditions
     #copy_files_with_conditions(csv_data_frame, "C:/Users/Diana/Info_extraction/copy_test")
 
@@ -150,6 +153,7 @@ if __name__ == '__main__':
 
     from append_functions import append_df_with_performer
     csv_data_frame = append_df_with_performer(csv_data_frame)
+
 
     #print(csv_data_frame)
     #norm_csv_path = os.path.normpath(csv_path)

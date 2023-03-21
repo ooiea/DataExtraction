@@ -117,6 +117,46 @@ def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
     df = pd.concat([df, df_with_drug_application], axis=1)
     return df
 
+def append_df_with_radiation(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Appends a column called "Radiation" to a given DataFrame
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Data Frame with information about the given Directory.
+        Returns
+        -------
+        df_with_radiation : pd.DataFrame
+            Returns a Pandas DataFrame with a new column "Radiation".
+        """
+
+    #Searching for experiments from biomems labor
+    biomems = ["BioMEMS", "BIOMEMS", "biomems", "Biomems"]
+    #pattern_biomems = '|'.join(biomems)
+    #df["Labor"] = df["Location"].str.contains(pattern_biomems)
+    #df["Labor"] = df["Labor"].map({True: "BioMEMS", False: "Not identified"})
+
+    after = ["Radiation", "radiation", "Irradiation", "irradiation", "aR", "a.R."]
+    before = ["Before radiation"]
+
+    list_of_patterns = [before, after]
+    series_list = []
+    for index, pattern in enumerate(list_of_patterns):
+        pattern = '|'.join(pattern)
+        series = df["Location"].str.contains(pattern)
+        series = series.map({True: list_of_patterns[index][0], False: None})
+        series_list.append(series)
+
+    series_to_one = series_list[0].combine_first(series_list[1])
+
+    for index in range(len(series_list) - 1):
+        series_to_one = series_to_one.combine_first(series_list[index + 1])
+    #print(series_to_one)
+
+    list = series_to_one.to_list()
+    df_with_radiation = pd.DataFrame(list, columns=["Radiation"])
+    df = pd.concat([df, df_with_radiation], axis=1)
+    return df
 
 def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
     """
