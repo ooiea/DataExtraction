@@ -1,5 +1,3 @@
-import pandas as pd
-
 
 def getListOfFiles(dirName, file_extension):
     import os
@@ -80,8 +78,9 @@ def create_pandas_df(list_of_files):
     csv_data_frame = pd.DataFrame(data=list_of_files, index=None, columns=["Location"])
     extension_series = csv_data_frame["Location"].apply(func=get_extension)
     extension_df = extension_series.to_frame(name="Format")
-    df = pd.concat([csv_data_frame, extension_df], axis=1)
+    #df = pd.concat([csv_data_frame, extension_df], axis=1)
     return df
+
 
 def get_extension(string):
     import os
@@ -125,45 +124,80 @@ if __name__ == '__main__':
     print(f"Total Number of files {len(list_of_files)}:")
     all_extensions = get_all_extensions_in_directory(list_of_files)
     print(f"All extensions in Working Directory: {all_extensions}")
-    list_of_files = get_list_of_files(norm_path, [".brw", ".dat"])
+    list_of_files = get_list_of_files(norm_path, [".brw"])
     print(f"Number of object {len(list_of_files)}:")
 
-
-
     # Write into .csv
-    csv_data_frame = create_pandas_df(list_of_files)
+    #csv_data_frame = create_pandas_df(list_of_files)
     csv_path = "C:/Users/Diana/Info_extraction/list_of_files.csv"
 
+    def append_recording_system_to_df(df: pd.DataFrame) -> pd.DataFrame:
+        """
+            Appends a column called "Recording System" to a given DataFrame
+            Parameters
+            ----------
+            df : pd.DataFrame
+                Data Frame with information about the given Directory.
+            Returns
+            -------
+            df_with_recording_system : pd.DataFrame
+                Returns a Pandas DataFrame with a new column "Recording System".
+            """
 
-    from append_functions import append_df_with_size
-    csv_data_frame = append_df_with_size(csv_data_frame)
+        list = []
+        for index, row in df["Format"].items():
+            if row == ".brw":
+                # print("HDMEA")
+                list.append("HDMEA")
+            elif row == ".dat":
+                # print("MEA")
+                list.append("MEA")
+            else:
+                # print(None)
+                list.append("None")
 
-    from append_functions import append_recording_system_to_df
+        df_with_recording_system = pd.DataFrame(list, columns=["Recording system"])
+        df = pd.concat([df, df_with_recording_system], axis=1)
+
+        return df
+
+
     csv_data_frame = append_recording_system_to_df(csv_data_frame)
 
-    from append_functions import append_df_with_culture_type
-    csv_data_frame = append_df_with_culture_type(csv_data_frame)
 
-    from append_functions import append_df_with_cells_kind
-    csv_data_frame = append_df_with_cells_kind(csv_data_frame)
+import shutil
+import os
+def get_list_of_files(path, file_type):
+    """
+        Generates a list with all file path from a given path.
+        Parameters
+        ----------
+        path : string
+            Either a path from a single file or a path of a directory.
+        file_type : string, list of string
+            The extension of the file type which should be taken into account.
+            Can be one or more than one extension.
+        Returns
+        -------
+        list_of_files : list of string
+            Returns the path of files in a chosen directories.
+        """
 
-    from append_functions import append_df_with_labor
-    csv_data_frame = append_df_with_labor(csv_data_frame)
-
-    from append_functions import append_df_with_performer
-    csv_data_frame = append_df_with_performer(csv_data_frame)
-
-    from append_functions import append_df_with_drug_application
-    csv_data_frame = append_df_with_drug_application(csv_data_frame)
-
-    from append_functions import append_df_with_radiation
-    csv_data_frame = append_df_with_radiation(csv_data_frame)
+    all_files = []
+    if os.path.isdir(path):
+        all_files = getListOfFiles(path, file_type)
+    else:
+        all_files.append(path)
+        return all_files
 
 
-    #from append_functions import copy_files_with_conditions
-    #copy_files_with_conditions(csv_data_frame, "C:/Users/Diana/Info_extraction/copy_test")
+source = input(all_files)
+destination = input(Users/Diana/Info_extraction)
 
 
-    #print(csv_data_frame)
-    #norm_csv_path = os.path.normpath(csv_path)
-    csv_data_frame.to_csv(csv_path)
+bic = ["Bicuculline", "bicuculline", "Bic", "bic"]
+pattern_bic = '|'.join(bic)
+
+for file in df["Location"]:
+    if (file.endswith('{}'.format(".brw"))) and (df["Location"].str.contains(pattern_bic)):
+        shutil.copy(os.source, destination)
