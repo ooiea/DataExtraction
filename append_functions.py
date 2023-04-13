@@ -1,5 +1,5 @@
-import re
 
+import re
 import pandas as pd
 
 
@@ -29,7 +29,7 @@ def append_recording_system_to_df(df: pd.DataFrame) -> pd.DataFrame:
             list.append("MEA")
         else:
             #print(None)
-            list.append("None")
+            list.append(None)
 
     df_with_recording_system = pd.DataFrame(list, columns=["Recording system"])
     df = pd.concat([df, df_with_recording_system], axis=1)
@@ -52,7 +52,7 @@ def append_df_with_culture_type(df: pd.DataFrame) -> pd.DataFrame:
 
     neuro = ["Neuro", "neuro", "NS", "ns"]
 
-    cardio = ["Cardio", "cardio"]
+    cardio = ["Cardio", "cardio", "Kardio", "myocytes", "HMZ"]
 
     list_of_patterns = [neuro, cardio]
     series_list = []
@@ -87,8 +87,8 @@ def append_df_with_cells_kind(df: pd.DataFrame) -> pd.DataFrame:
         """
 
     rat = ["Rat neurons", "Rat cells", "Ratneuronen", "Rat", "rat"]
-    hesc = ["hESC", "human embryonic stem cells", "human"]
-    ipsc = ["iPSC", "induced pluripotent stem cells", "induced"]
+    hesc = ["hESC", "human embryonic stem cells", "hES", "human"]
+    ipsc = ["iPSC", "induced pluripotent stem cells", "iPS", "induced"]
     chicken = ["Chicken", "chicken", "Hühn", "hühn"]
 
     list_of_patterns = [rat, hesc, ipsc, chicken]
@@ -125,7 +125,7 @@ def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
             Returns a Pandas DataFrame with a new column "Drug application".
         """
 
-    #Searching for experiments with "Bicucullin" application
+    #Searching for experiments with "Bicuculline" application
     bic = ["Bicuculline","bicuculline", "Bic", "bic"]
 
     #Searching for experiments with "Carbamazepine"
@@ -157,6 +157,45 @@ def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
     list = series_to_one.to_list()
     df_with_drug_application = pd.DataFrame(list, columns=["Drug application"])
     df = pd.concat([df, df_with_drug_application], axis=1)
+    return df
+
+def append_df_with_drug_dose(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Appends a column called "Drug dose" to a given DataFrame
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Data Frame with information about the given Directory.
+        Returns
+        -------
+        df_with_drug_dose : pd.DataFrame
+            Returns a Pandas DataFrame with a new column "Drug dose".
+        """
+
+    dose1 = ["10 microM", "10 muM", "10muM"]
+    dose2 = ["5 microM", "5 muM", "5muM"]
+    dose3 = ["2 microM", "2 muM", "2muM"]
+    dose4 = ["1 microM", "1 muM", "1muM"]
+    dose5 = ["0,5 microM", "0,5 muM", "05muM"]
+    dose6 = ["0,1 microM", "0,1 muM", "01muM"]
+
+    list_of_patterns = [dose1, dose2, dose3, dose4, dose5, dose6]
+    series_list = []
+    for index, pattern in enumerate(list_of_patterns):
+
+        pattern = '|'.join(pattern)
+        series = df["Location"].str.contains(pattern)
+        series = series.map({True: list_of_patterns[index][0], False: None})
+        series_list.append(series)
+
+    series_to_one = series_list[0].combine_first(series_list[1])
+
+    for index in range(len(series_list)-1):
+        series_to_one = series_to_one.combine_first(series_list[index+1])
+
+    list = series_to_one.to_list()
+    df_with_drug_dose = pd.DataFrame(list, columns=["Drug dose"])
+    df = pd.concat([df, df_with_drug_dose], axis=1)
     return df
 
 def append_df_with_radiation(df: pd.DataFrame) -> pd.DataFrame:
@@ -241,14 +280,18 @@ def append_df_with_performer(df: pd.DataFrame) -> pd.DataFrame:
     tk = ["Tim Köhler", "Köhler", "köhler"]
     sk = ["Steffen Künzinger", "Künziger", "künziger"]
     pr = ["Pascal Rüde", "Rüde", "rüde"]
-    tkr = ["Tobias Kraus", "Kraus", "kraus"]
+    tkr = ["Tobias Kraus", "Tobias", "Kraus", "kraus"]
     mc = ["Manuel Ciba", "Ciba", "ciba"]
     nn = ["Nahid Nafez", "Nafez", "nafez"]
     os = ["Oliver Smolin", "Smolin", "smolin"]
     eaf = ["Enes Aydin Furkan", "Furkan", "furkan"]
     mj = ["Melanie Jungblut", "Jungblut"]
+    il = ["Ismael Losano", "Losano"]
+    nkr = ["Nico Kück", "Kück"]
+    ah = ["Anja Heselide", "Heselide"]
 
-    list_of_patterns = [ad, cn, jf, mm, ps, bk, tk, sk, pr, tkr, mc, nn, os, eaf, mj]
+
+    list_of_patterns = [ad, cn, jf, mm, ps, bk, tk, sk, pr, tkr, mc, nn, os, eaf, mj, il, nkr, ah]
     #patterns = [ad, cn, jf, mm, ps, bk, tk, sk, pr, tkr, mc, nn, os, eaf, mj]
 
 
@@ -288,8 +331,8 @@ def append_df_with_size(df: pd.DataFrame) -> pd.DataFrame:
     list = []
     for index, row in df.iterrows():
         size = os.path.getsize(row["Location"])*(1/1024)*(1/1024)*(1/1024)
+        #size in Gb
         list.append(size)
-       #  list = size(set(path))
 
     df_with_size = pd.DataFrame(list, columns=["Size"])
     df = pd.concat([df, df_with_size], axis=1)
@@ -303,13 +346,9 @@ def copy_files_with_conditions(df, path):
     df = df[df["Drug application"] == 'Bicuculline']
     df = df[df["Recording system"] == "MEA"]
     df = df[df["Format"] == ".dat"]
-
-    #for index in enumerate(df[df["Size"]]):
-    #for index in df[df["Size"]]:
-    # df[df["Size"] > 12] and df[df["Size"] < 14]:
-    df = df[df["Size"] < 1.4]
-    df = df[df["Size"] > 1.2]
-    print(df["Size"])
+    df = df[df["Drug dose"] == "10 microM"]
+    #df = df[df["Size"] < 1.4]
+    df = df[df["Size"] > 1.3]
 
     for row in df.iterrows():
         original_file_path = row[1]["Location"]
