@@ -289,9 +289,15 @@ def append_df_with_performer(df: pd.DataFrame) -> pd.DataFrame:
     il = ["Ismael Losano", "Losano"]
     nkr = ["Nico Kück", "Kück"]
     ah = ["Anja Heselide", "Heselide"]
+    sg = ["Sebastian Gutsfeld", "Gutsfeld"]
+    sh = ["Simone Hufgard", "Hufgard"]
+    df = ["Dennis Flachs", "Flachs"]
+    sho = ["Stefan Homes", "Homes"]
+    ct = ["Christiane Thielemann"]
+    ca = ["Sebastian Allig"]
 
 
-    list_of_patterns = [ad, cn, jf, mm, ps, bk, tk, sk, pr, tkr, mc, nn, os, eaf, mj, il, nkr, ah]
+    list_of_patterns = [ad, cn, jf, mm, ps, bk, tk, sk, pr, tkr, mc, nn, os, eaf, mj, il, nkr, ah, sg, sh, df, sho, ct, ca]
     #patterns = [ad, cn, jf, mm, ps, bk, tk, sk, pr, tkr, mc, nn, os, eaf, mj]
 
 
