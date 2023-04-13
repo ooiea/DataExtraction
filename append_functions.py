@@ -339,7 +339,6 @@ def append_df_with_size(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-
 def copy_files_with_conditions(df, path):
     import shutil
     import os
