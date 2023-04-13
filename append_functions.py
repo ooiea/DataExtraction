@@ -298,9 +298,6 @@ def append_df_with_performer(df: pd.DataFrame) -> pd.DataFrame:
 
 
     list_of_patterns = [ad, cn, jf, mm, ps, bk, tk, sk, pr, tkr, mc, nn, os, eaf, mj, il, nkr, ah, sg, sh, df, sho, ct, ca]
-    #patterns = [ad, cn, jf, mm, ps, bk, tk, sk, pr, tkr, mc, nn, os, eaf, mj]
-
-
 
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
