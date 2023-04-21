@@ -50,15 +50,15 @@ def append_df_with_culture_type(df: pd.DataFrame) -> pd.DataFrame:
             Returns a Pandas DataFrame with a new column "Culture type".
         """
 
-    neuro = ["Neuro", "neuro", "NS", "ns"]
+    neuro = ["Neuro", "neuro", "NS"]
 
     cardio = ["Cardio", "cardio", "Kardio", "myocytes", "HMZ"]
 
     list_of_patterns = [neuro, cardio]
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
-        pattern = '|'.join(pattern)
-        series = df["Location"].str.contains(pattern)
+        patterns = '|'.join(pattern)
+        series = df["Location"].str.contains(patterns)
         series = series.map({True: list_of_patterns[index][0], False: None})
         series_list.append(series)
 
@@ -95,8 +95,8 @@ def append_df_with_cells_kind(df: pd.DataFrame) -> pd.DataFrame:
 
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
-        pattern = '|'.join(pattern)
-        series = df["Location"].str.contains(pattern)
+        patterns = '|'.join(pattern)
+        series = df["Location"].str.contains(patterns)
         series = series.map({True: list_of_patterns[index][0], False: None})
         series_list.append(series)
 
@@ -144,8 +144,8 @@ def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
 
-        pattern = '|'.join(pattern)
-        series = df["Location"].str.contains(pattern)
+        patterns = '|'.join(pattern)
+        series = df["Location"].str.contains(patterns)
         series = series.map({True: list_of_patterns[index][0], False: None})
         series_list.append(series)
 
@@ -183,8 +183,8 @@ def append_df_with_drug_dose(df: pd.DataFrame) -> pd.DataFrame:
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
 
-        pattern = '|'.join(pattern)
-        series = df["Location"].str.contains(pattern)
+        patterns = '|'.join(pattern)
+        series = df["Location"].str.contains(patterns)
         series = series.map({True: list_of_patterns[index][0], False: None})
         series_list.append(series)
 
@@ -211,11 +211,29 @@ def append_df_with_radiation(df: pd.DataFrame) -> pd.DataFrame:
             Returns a Pandas DataFrame with a new column "Radiation".
         """
 
-    rad = ["Radiation", "radiation", "Irradiation", "irradiation", "aR", "a.R."]
+    rad = ["Radiation", "radiation", "Irradiation", "irradiation", "aR", "a.R.", "Gy", "Strahlung"]
+    ionizing = ["Ionizing", "X-Ray", "X-ray", "Xray"]
+    nonionizing1 = ["Non-ionizing, TETRA", "TETRA"]
+    nonionizing2 = ["Non-ionizing, GSM", "mobile", "GSM"]
 
-    pattern_rad = '|'.join(rad)
-    df["Radiation"] = df["Location"].str.contains(pattern_rad)
-    df["Radiation"] = df["Radiation"].map({True: "Irradiated", False: None})
+    list_of_patterns = [rad, ionizing, nonionizing1, nonionizing2]
+
+    series_list = []
+    for index, pattern in enumerate(list_of_patterns):
+        patterns = '|'.join(pattern)
+        series = df["Location"].str.contains(patterns)
+        series = series.map({True: list_of_patterns[index][0], False: None})
+        series_list.append(series)
+
+    series_to_one = series_list[0].combine_first(series_list[1])
+
+    for index in range(len(series_list) - 1):
+        series_to_one = series_to_one.combine_first(series_list[index + 1])
+    # print(series_to_one)
+
+    list = series_to_one.to_list()
+    df_with_radiation = pd.DataFrame(list, columns=["Radiation"])
+    df = pd.concat([df, df_with_radiation], axis=1)
 
     return df
 
@@ -241,8 +259,8 @@ def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
 
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
-        pattern = '|'.join(pattern)
-        series = df["Location"].str.contains(pattern)
+        patterns = '|'.join(pattern)
+        series = df["Location"].str.contains(patterns)
         series = series.map({True: list_of_patterns[index][0], False: None})
         series_list.append(series)
 
@@ -257,6 +275,26 @@ def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
     df = pd.concat([df, df_with_labor], axis=1)
     return df
 
+def append_df_with_stimulation(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Appends a column called "Stimulation" to a given DataFrame
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Data Frame with information about the given Directory.
+        Returns
+        -------
+        df_with_stimulation : pd.DataFrame
+            Returns a Pandas DataFrame with a new column "Stimulation".
+        """
+
+    stim = ["Stimulation", "Stim", "stim", "Slice Stim"]
+
+    pattern_stim = '|'.join(stim)
+    df["Stimulation"] = df["Location"].str.contains(pattern_stim)
+    df["Stimulation"] = df["Stimulation"].map({True: "Slice stimulation", False: None})
+
+    return df
 
 def append_df_with_performer(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -284,20 +322,21 @@ def append_df_with_performer(df: pd.DataFrame) -> pd.DataFrame:
     mc = ["Manuel Ciba", "Ciba", "ciba"]
     nn = ["Nahid Nafez", "Nafez", "nafez"]
     os = ["Oliver Smolin", "Smolin", "smolin"]
-    eaf = ["Enes Aydin Furkan", "Furkan", "furkan"]
+    eaf = ["Enes Aydin Furkan", "Furkan", "furkan", "Enes"]
     mj = ["Melanie Jungblut", "Jungblut"]
     il = ["Ismael Losano", "Losano"]
     nkr = ["Nico Kück", "Kück"]
     ah = ["Anja Heselide", "Heselide"]
     sg = ["Sebastian Gutsfeld", "Gutsfeld"]
     sh = ["Simone Hufgard", "Hufgard"]
-    df = ["Dennis Flachs", "Flachs"]
+    dfl = ["Dennis Flachs", "Flachs"]
     sho = ["Stefan Homes", "Homes"]
-    ct = ["Christiane Thielemann"]
-    ca = ["Sebastian Allig"]
+    ct = ["Christiane Thielemann", "Thielemann"]
+    ca = ["Sebastian Allig", "Allig"]
 
 
-    list_of_patterns = [ad, cn, jf, mm, ps, bk, tk, sk, pr, tkr, mc, nn, os, eaf, mj, il, nkr, ah, sg, sh, df, sho, ct, ca]
+    list_of_patterns = [ad, cn, jf, mm, ps, bk, tk, sk, pr, tkr, mc,
+                        nn, os, eaf, mj, il, nkr, ah, sg, sh, dfl, sho, ct, ca]
 
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
@@ -334,11 +373,41 @@ def append_df_with_size(df: pd.DataFrame) -> pd.DataFrame:
     list = []
     for index, row in df.iterrows():
         size = os.path.getsize(row["Location"])*(1/1024)*(1/1024)*(1/1024)
-        #size in Gb
+        #The size is in Gb
         list.append(size)
 
     df_with_size = pd.DataFrame(list, columns=["Size"])
     df = pd.concat([df, df_with_size], axis=1)
+
+    return df
+
+def append_cleaning_function(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Removes trash files from a given DataFrame.
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Data Frame with information about the given Directory.
+        Returns
+        -------
+        df : pd.DataFrame
+            Returns a Pandas DataFrame without trash files.
+        """
+
+    trash = ["Trash", "trash", "Error", "error", "Fehler", "fehler", "müll",
+                        "LFP", "GlukZ", "DrCell", "Drcell", "drcell", "software"]
+    df = df[~df.Location.str.contains('|'.join(trash))]
+    df = df.reset_index(drop=True)
+
+    #If size = 0
+    for index, row in df.iterrows():
+        if row["Size"] == 0:
+            df = df.drop(index=index)
+
+    #If recording system was not identified
+    for index, row in df.iterrows():
+        if row["Recording system"] == None:
+            df = df.drop(index=index)
 
     return df
 
@@ -350,15 +419,19 @@ def copy_files_with_conditions(df, path):
     df = df[df["Format"] == ".dat"]
     df = df[df["Drug dose"] == "10 microM"]
     #df = df[df["Size"] < 1.4]
-    df = df[df["Size"] > 1.3]
+    #df = df[df["Size"] > 1.3]
 
-    for row in df.iterrows():
+    print('Number of bicuculline files with chosen parameters:', len(df.index))
+
+    return df
+
+    """for row in df.iterrows():
         original_file_path = row[1]["Location"]
         file_name = os.path.basename(original_file_path)
         path_to_copy = os.path.join(path, file_name)
         new_file_path = os.path.normpath(path_to_copy)
         shutil.copyfile(original_file_path, new_file_path)
         csv_file_path = os.path.join(path, "info.csv")
-        df.to_csv(csv_file_path)
+        df.to_csv(csv_file_path)"""
 
 
