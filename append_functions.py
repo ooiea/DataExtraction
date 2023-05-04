@@ -17,21 +17,8 @@ def append_recording_system_to_df(df: pd.DataFrame) -> pd.DataFrame:
             Returns a Pandas DataFrame with a new column "Recording System".
         """
 
-    #rec_sys_list = ["HDMEA", "MEA", "None"]
-
-    list = []
-    for index, row in df["Format"].items():
-        if row == ".brw":
-            #print("HDMEA")
-            list.append("HDMEA")
-        elif row == ".dat":
-            #print("MEA")
-            list.append("MEA")
-        else:
-            #print(None)
-            list.append(None)
-
-    df_with_recording_system = pd.DataFrame(list, columns=["Recording system"])
+    rec_sys_dict = {".brw": "HDMEA", ".dat": "MEA", "": None}
+    df_with_recording_system = pd.DataFrame(df["Format"].map(rec_sys_dict).values, columns=["Recording system"])
     df = pd.concat([df, df_with_recording_system], axis=1)
 
     return df
@@ -51,8 +38,7 @@ def append_df_with_culture_type(df: pd.DataFrame) -> pd.DataFrame:
         """
 
     neuro = ["Neuro", "neuro", "NS"]
-
-    cardio = ["Cardio", "cardio", "Kardio", "myocytes", "HMZ"]
+    cardio = ["Cardio", "cardio", "Kardio", "myocytes", "HMZ", "hmz"]
 
     list_of_patterns = [neuro, cardio]
     series_list = []
@@ -135,7 +121,7 @@ def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
     lsd = ["LSD", "lsd"]
 
     # Searching for experiments with "Levetiracetam"
-    lev = ["levetiracetam", "Levetiracetam", "lev"]
+    lev = ["Levetiracetam", "levetiracetam", "lev"]
 
     # Searching for experiments with "Cisplatin"
     cisplatin = ["Cisplatin", "cisplatin"]
@@ -172,16 +158,20 @@ def append_df_with_drug_dose(df: pd.DataFrame) -> pd.DataFrame:
             Returns a Pandas DataFrame with a new column "Drug dose".
         """
 
-    dose1 = ["10 microM", "10 muM", "10muM"]
-    dose2 = ["5 microM", "5 muM", "5muM"]
-    dose3 = ["2 microM", "2 muM", "2muM"]
-    dose4 = ["1 microM", "1 muM", "1muM"]
-    dose5 = ["0,5 microM", "0,5 muM", "05muM"]
-    dose6 = ["0,1 microM", "0,1 muM", "01muM"]
+    dose1 = ["10 microM", "10 muM", "-10muM"]
+    dose2 = ["5 microM", "5 muM", "-5muM"]
+    dose3 = ["2 microM", "2 muM", "-2muM"]
+    dose4 = ["1 microM", "1 muM", "-1muM"]
+    dose5 = ["0,5 microM", "0,5 muM", "-05muM"]
+    dose6 = ["0,2 microM", "0,2 muM", "-02muM"]
+    dose7 = ["0,1 microM", "0,1 muM", "-01muM"]
 
-    list_of_patterns = [dose1, dose2, dose3, dose4, dose5, dose6]
+    list_of_patterns = [dose1, dose2, dose3, dose4, dose5, dose6, dose7]
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
+
+        # Random sign except zero: ^0    OR  ca*t will match 'ct' (0 'a' characters) OR   \[0-9] except special classes(numbers in this case)
+        #patterns = '0*'+'|'.join(pattern)
 
         patterns = '|'.join(pattern)
         series = df["Location"].str.contains(patterns)
@@ -212,7 +202,7 @@ def append_df_with_radiation(df: pd.DataFrame) -> pd.DataFrame:
         """
 
     rad = ["Radiation", "radiation", "Irradiation", "irradiation", "aR", "a.R.", "Gy", "Strahlung"]
-    ionizing = ["Ionizing", "X-Ray", "X-ray", "Xray"]
+    ionizing = ["Ionizing, X-Ray", "X-Ray", "X-ray", "Xray"]
     nonionizing1 = ["Non-ionizing, TETRA", "TETRA"]
     nonionizing2 = ["Non-ionizing, GSM", "mobile", "GSM"]
 
@@ -234,6 +224,49 @@ def append_df_with_radiation(df: pd.DataFrame) -> pd.DataFrame:
     list = series_to_one.to_list()
     df_with_radiation = pd.DataFrame(list, columns=["Radiation"])
     df = pd.concat([df, df_with_radiation], axis=1)
+
+    return df
+
+def append_df_with_rad_dose(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Appends a column called "Radiation dose" to a given DataFrame
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Data Frame with information about the given Directory.
+        Returns
+        -------
+        df_with_rad_dose : pd.DataFrame
+            Returns a Pandas DataFrame with a new column "Drug dose".
+        """
+
+    dose_with_numbers = []
+
+    # Define the regular expression pattern
+    pattern = re.compile(r'\d*\W*Gy\W*\d*')
+
+    # Loop through the "Location" column and filter out the strings that match the pattern
+    for index in df["Location"]:
+        if pattern.match(str(index)):
+            dose_with_numbers.append(index)
+        else:
+            dose_with_numbers.append(None)
+
+    # Find the closest number to "Gy" in each matched string
+    rad_dose = []
+    for dose_str in dose_with_numbers:
+        if dose_str is not None:
+            # Extract all numbers from the string using regular expressions
+            numbers = re.findall(r'\d+\.?\d*', dose_str)
+            # Convert the numbers to floats
+            numbers = [float(n) for n in numbers]
+            # Find the number closest to "Gy"
+            closest_num = min(numbers, key=lambda x: abs(x - 2))
+            rad_dose.append(closest_num)
+        else:
+            rad_dose.append(None)
+
+    df["Radiation dose"] = rad_dose
 
     return df
 
@@ -403,17 +436,18 @@ def append_cleaning_function(df: pd.DataFrame) -> pd.DataFrame:
     for index, row in df.iterrows():
         if row["Size"] == 0:
             df = df.drop(index=index)
+            df = df.reset_index(drop=True)
 
     #If recording system was not identified
     for index, row in df.iterrows():
         if row["Recording system"] == None:
             df = df.drop(index=index)
+            df = df.reset_index(drop=True)
 
     return df
 
 def copy_files_with_conditions(df, path):
     import shutil
-    import os
     df = df[df["Drug application"] == 'Bicuculline']
     df = df[df["Recording system"] == "MEA"]
     df = df[df["Format"] == ".dat"]

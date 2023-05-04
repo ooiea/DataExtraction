@@ -1,4 +1,6 @@
 import pandas as pd
+import os
+import timeit
 
 
 def getListOfFiles(dirName, file_extension):
@@ -89,7 +91,7 @@ def get_extension(string):
 
 
 # Find all the formats in directory by splitting string after the dot
-def get_all_extensions_in_directory(file_list):
+def get_all_extensions_in_directory(list_of_files):
     """
         Generates a list with all file formats from a given path.
         Parameters
@@ -100,22 +102,15 @@ def get_all_extensions_in_directory(file_list):
             Can be one or more than one extension.
         Returns
         -------
-        extension_list : string
+        list(extensions) : string
             Returns all the formats in directory by splitting string after the dot.
         """
-    import os
-    extension_list = []
-    for i in file_list:
-        extensions = os.path.splitext(i)[1]
-        extension_list.append(extensions)
 
-    list_of_extensions = list(set(extension_list))
-    return list_of_extensions
+    extensions = set(os.path.splitext(file)[1] for file in list_of_files)
+    return list(extensions)
 
 
 if __name__ == '__main__':
-    import os
-    import pandas as pd
 
     path = "C:/Users\Diana\Desktop\Studium\Master_project\Data_from_W8"
 
@@ -127,7 +122,6 @@ if __name__ == '__main__':
     print(f"All extensions in Working Directory: {all_extensions}")
     list_of_files = get_list_of_files(norm_path, [".brw", ".dat"])
     print(f"Number of object .brw and .dat: {len(list_of_files)}")
-
 
 
     # Write into .csv
@@ -156,8 +150,14 @@ if __name__ == '__main__':
     from append_functions import append_df_with_drug_application
     csv_data_frame = append_df_with_drug_application(csv_data_frame)
 
+    from append_functions import append_df_with_drug_dose
+    csv_data_frame = append_df_with_drug_dose(csv_data_frame)
+
     from append_functions import append_df_with_radiation
     csv_data_frame = append_df_with_radiation(csv_data_frame)
+
+    from append_functions import append_df_with_rad_dose
+    csv_data_frame = append_df_with_rad_dose(csv_data_frame)
 
     from append_functions import append_df_with_stimulation
     csv_data_frame = append_df_with_stimulation(csv_data_frame)
@@ -165,9 +165,10 @@ if __name__ == '__main__':
     from append_functions import append_cleaning_function
     csv_data_frame = append_cleaning_function(csv_data_frame)
 
-    from append_functions import copy_files_with_conditions
-    copy_files_with_conditions(csv_data_frame, "C:/Users/Diana/Info_extraction/copy_test")
 
+
+    #from append_functions import copy_files_with_conditions
+    #copy_files_with_conditions(csv_data_frame, "C:/Users/Diana/Info_extraction/copy_test")
 
     #print(csv_data_frame)
     #norm_csv_path = os.path.normpath(csv_path)
