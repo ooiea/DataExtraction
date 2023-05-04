@@ -141,6 +141,9 @@ if __name__ == '__main__':
     from append_functions import append_df_with_cells_kind
     csv_data_frame = append_df_with_cells_kind(csv_data_frame)
 
+    from append_functions import append_df_with_div
+    csv_data_frame = append_df_with_div(csv_data_frame)
+
     from append_functions import append_df_with_labor
     csv_data_frame = append_df_with_labor(csv_data_frame)
 
@@ -158,6 +161,9 @@ if __name__ == '__main__':
 
     from append_functions import append_df_with_rad_dose
     csv_data_frame = append_df_with_rad_dose(csv_data_frame)
+
+    from append_functions import append_df_with_date
+    csv_data_frame = append_df_with_date(csv_data_frame)
 
     from append_functions import append_df_with_stimulation
     csv_data_frame = append_df_with_stimulation(csv_data_frame)

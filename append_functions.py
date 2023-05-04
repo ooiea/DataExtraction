@@ -75,7 +75,7 @@ def append_df_with_cells_kind(df: pd.DataFrame) -> pd.DataFrame:
     rat = ["Rat neurons", "Rat cells", "Ratneuronen", "Rat", "rat"]
     hesc = ["hESC", "human embryonic stem cells", "hES", "human"]
     ipsc = ["iPSC", "induced pluripotent stem cells", "iPS", "induced"]
-    chicken = ["Chicken", "chicken", "Hühn", "hühn"]
+    chicken = ["Chicken embryo cardiomyocytes", "Chicken", "chicken", "Hühn", "hühn"]
 
     list_of_patterns = [rat, hesc, ipsc, chicken]
 
@@ -95,6 +95,54 @@ def append_df_with_cells_kind(df: pd.DataFrame) -> pd.DataFrame:
     list = series_to_one.to_list()
     df_with_cells_kind = pd.DataFrame(list, columns=["Cell's kind"])
     df = pd.concat([df, df_with_cells_kind], axis=1)
+
+    return df
+
+def append_df_with_div(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Appends a column called "DIV" to a given DataFrame
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Data Frame with information about the given Directory.
+        Returns
+        -------
+        df_with_div : pd.DataFrame
+            Returns a Pandas DataFrame with a new column "DIV".
+        """
+    import re
+    div_patterns = []
+
+    # Define the regular expression pattern
+    pattern = re.compile(r'\d*\W*div\W*\d*', re.IGNORECASE)
+
+    # Loop through the "Location" column and filter out the strings that match the pattern
+    for index in df["Location"]:
+        if pattern.match(str(index)):
+            div_patterns.append(index)
+        else:
+            div_patterns.append(None)
+
+    # Find the closest number to "div" or "DIV" in each matched string
+    div = []
+    for div_str in div_patterns:
+        if div_str is not None:
+            # Extract all numbers from the string using regular expressions
+            numbers = re.findall(r'\d+\.?\d*', div_str)
+            # Convert the numbers to floats
+            numbers = [float(n) for n in numbers]
+            # Find the index of "div" or "DIV" in the string
+            div_index = div_str.lower().find("div")
+            if div_index != -1:
+                # Find the number closest to the "div" or "DIV" position
+                closest_num = min(numbers, key=lambda x: abs(numbers.index(x) - div_index))
+                div.append(closest_num)
+            else:
+                div.append(None)
+        else:
+            div.append(None)
+
+    df["DIV"] = div
 
     return df
 
@@ -239,30 +287,37 @@ def append_df_with_rad_dose(df: pd.DataFrame) -> pd.DataFrame:
         df_with_rad_dose : pd.DataFrame
             Returns a Pandas DataFrame with a new column "Drug dose".
         """
+    import re
+    def closest_num(dose_str):
+        """
+        Returns the number closest to "Gy" in the given string based on position
+        """
+        # Define the regular expression pattern
+        pattern = re.compile(r'\d*\.?\d*\s*Gy')
 
-    dose_with_numbers = []
+        # Find all matches in the string
+        matches = pattern.findall(dose_str)
 
+        # Calculate the distance between "Gy" and each match
+        distances = [abs(dose_str.find("Gy") - dose_str.find(m)) for m in matches]
+
+        # Find the index of the match with the smallest distance
+        min_idx = distances.index(min(distances))
+
+        # Extract the number from the matching string and convert to float
+        closest_num = float(re.findall(r'\d+\.?\d*', matches[min_idx])[0])
+
+        return closest_num
+
+    rad_dose = []
     # Define the regular expression pattern
     pattern = re.compile(r'\d*\W*Gy\W*\d*')
 
-    # Loop through the "Location" column and filter out the strings that match the pattern
+    # Loop through the "Location" column and find the closest number to "Gy" in each matched string
     for index in df["Location"]:
         if pattern.match(str(index)):
-            dose_with_numbers.append(index)
-        else:
-            dose_with_numbers.append(None)
-
-    # Find the closest number to "Gy" in each matched string
-    rad_dose = []
-    for dose_str in dose_with_numbers:
-        if dose_str is not None:
-            # Extract all numbers from the string using regular expressions
-            numbers = re.findall(r'\d+\.?\d*', dose_str)
-            # Convert the numbers to floats
-            numbers = [float(n) for n in numbers]
-            # Find the number closest to "Gy"
-            closest_num = min(numbers, key=lambda x: abs(x - 2))
-            rad_dose.append(closest_num)
+            closest_num_val = closest_num(index)
+            rad_dose.append(closest_num_val)
         else:
             rad_dose.append(None)
 
@@ -306,6 +361,43 @@ def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
     list = series_to_one.to_list()
     df_with_labor = pd.DataFrame(list, columns=["Labor"])
     df = pd.concat([df, df_with_labor], axis=1)
+    return df
+
+def append_df_with_date(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Appends a column called "Date" to a given DataFrame
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Data Frame with information about the given Directory.
+        Returns
+        -------
+        df_with_stimulation : pd.DataFrame
+            Returns a Pandas DataFrame with a new column "Date".
+        """
+
+    import re
+
+    # Defining regular expressions to match different date formats
+    date_regexes = [
+        r'\d{2}/\d{2}/\d{4}',
+        r'\d{4}-\d{2}-\d{2}',
+        r'\d{2}-\d{2}-\d{4}',
+        r'\d{2}/\d{2}/\d{2}',
+    ]
+
+    # Create a function to extract the date from the location string
+    def extract_date(location_str):
+        for regex in date_regexes:
+            match = re.search(regex, location_str)
+            if match:
+                return match.group(0)
+        return None
+
+    # apply the function to the "Location" column and create a new "Date" column
+    df['Date'] = df['Location'].apply(extract_date)
+
+    print(df)
     return df
 
 def append_df_with_stimulation(df: pd.DataFrame) -> pd.DataFrame:
