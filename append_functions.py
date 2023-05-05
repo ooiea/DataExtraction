@@ -249,7 +249,7 @@ def append_df_with_radiation(df: pd.DataFrame) -> pd.DataFrame:
             Returns a Pandas DataFrame with a new column "Radiation".
         """
 
-    rad = ["Radiation", "radiation", "Irradiation", "irradiation", "aR", "a.R.", "Gy", "Strahlung"]
+    rad = ["Radiation", "radiation", "Irradiation", "irradiation", "aR", "a.R.", "Gy", "Strahlung", "Strahl", "strahl"]
     ionizing = ["Ionizing, X-Ray", "X-Ray", "X-ray", "Xray"]
     nonionizing1 = ["Non-ionizing, TETRA", "TETRA"]
     nonionizing2 = ["Non-ionizing, GSM", "mobile", "GSM"]
@@ -325,6 +325,54 @@ def append_df_with_rad_dose(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
+def append_df_with_ar_time(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Appends a column called "Time after radiation, h" to a given DataFrame
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Data Frame with information about the given Directory.
+        Returns
+        -------
+        df_with_ar_time : pd.DataFrame
+            Returns a Pandas DataFrame with a new column "Time after radiation, h".
+        """
+    import re
+    art_patterns = []
+
+    # Define the regular expression pattern
+    pattern = re.compile(r'\d*\W*h\W*\d*', re.IGNORECASE)
+
+    # Loop through the "Location" column and filter out the strings that match the pattern
+    for index in df["Location"]:
+        if pattern.match(str(index)):
+            art_patterns.append(index)
+        else:
+            art_patterns.append(None)
+
+    # Find the closest number to "h" or "H" in each matched string
+    art = []
+    for art_str in art_patterns:
+        if art_str is not None:
+            # Extract all numbers from the string using regular expressions
+            numbers = re.findall(r'\d+\.?\d*', art_str)
+            # Convert the numbers to floats
+            numbers = [float(n) for n in numbers]
+            # Find the index of "h" or "H" in the string
+            div_index = art_str.lower().find("h")
+            if div_index != -1:
+                # Find the number closest to the "h" or "H" position
+                closest_num = min(numbers, key=lambda x: abs(numbers.index(x) - div_index))
+                art.append(closest_num)
+            else:
+                art.append(None)
+        else:
+            art.append(None)
+
+    df["Time after radiation, h"] = art
+
+    return df
+
 def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
     """
         Appends a column called "Labor" to a given DataFrame
@@ -361,43 +409,6 @@ def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
     list = series_to_one.to_list()
     df_with_labor = pd.DataFrame(list, columns=["Labor"])
     df = pd.concat([df, df_with_labor], axis=1)
-    return df
-
-def append_df_with_date(df: pd.DataFrame) -> pd.DataFrame:
-    """
-        Appends a column called "Date" to a given DataFrame
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Data Frame with information about the given Directory.
-        Returns
-        -------
-        df_with_stimulation : pd.DataFrame
-            Returns a Pandas DataFrame with a new column "Date".
-        """
-
-    import re
-
-    # Defining regular expressions to match different date formats
-    date_regexes = [
-        r'\d{2}/\d{2}/\d{4}',
-        r'\d{4}-\d{2}-\d{2}',
-        r'\d{2}-\d{2}-\d{4}',
-        r'\d{2}/\d{2}/\d{2}',
-    ]
-
-    # Create a function to extract the date from the location string
-    def extract_date(location_str):
-        for regex in date_regexes:
-            match = re.search(regex, location_str)
-            if match:
-                return match.group(0)
-        return None
-
-    # apply the function to the "Location" column and create a new "Date" column
-    df['Date'] = df['Location'].apply(extract_date)
-
-    print(df)
     return df
 
 def append_df_with_stimulation(df: pd.DataFrame) -> pd.DataFrame:
@@ -504,6 +515,65 @@ def append_df_with_size(df: pd.DataFrame) -> pd.DataFrame:
     df_with_size = pd.DataFrame(list, columns=["Size"])
     df = pd.concat([df, df_with_size], axis=1)
 
+    return df
+
+
+def append_df_with_date(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Appends a column called "Date" to a given DataFrame
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Data Frame with information about the given Directory.
+        Returns
+        -------
+        df_with_stimulation : pd.DataFrame
+            Returns a Pandas DataFrame with a new column "Date".
+        """
+
+    import re
+    from datetime import datetime
+
+    date_patterns = []
+
+    # Define regular expression patterns for different date formats
+    patterns = [
+        r'\d{1,2}/\d{1,2}/\d{4}',  # mm/dd/yyyy
+        r'\d{4}/\d{1,2}/\d{1,2}',  # yyyy/mm/dd
+        r'\d{4}-\d{1,2}-\d{1,2}',  # yyyy-mm-dd
+        r'\d{1,2}\-\d{1,2}\-\d{4}',  # dd-mm-yyyy
+    ]
+
+    # Loop through the "Location" column and filter out the strings that match the pattern
+    for index in df["Location"]:
+        date_pattern = None
+        for pattern in patterns:
+            match = re.search(pattern, str(index))
+            if match:
+                date_pattern = pattern
+                break
+        date_patterns.append(date_pattern)
+
+    # Convert date strings to datetime objects in the "yyyy-mm-dd" format
+    dates = []
+    for pattern, loc in zip(date_patterns, df["Location"]):
+        if pattern:
+            match = re.search(pattern, str(loc))
+            date_str = match.group(0)
+            date_obj = None
+            if pattern == r'\d{1,2}/\d{1,2}/\d{4}':
+                date_obj = datetime.strptime(date_str, '%m/%d/%Y')
+            elif pattern == r'\d{4}/\d{1,2}/\d{1,2}':
+                date_obj = datetime.strptime(date_str, '%Y/%m/%d')
+            elif pattern == r'\d{4}-\d{1,2}-\d{1,2}':
+                date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+            elif pattern == r'\d{1,2}-\d{1,2}-\d{4}':
+                date_obj = datetime.strptime(date_str, '%d-%m-%Y')
+            dates.append(date_obj.strftime('%Y-%m-%d'))
+        else:
+            dates.append(None)
+
+    df["Date"] = dates
     return df
 
 def append_cleaning_function(df: pd.DataFrame) -> pd.DataFrame:

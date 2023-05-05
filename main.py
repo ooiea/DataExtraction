@@ -1,7 +1,9 @@
 import pandas as pd
 import os
-import timeit
+import time
 
+# get the start time
+st = time.time()
 
 def getListOfFiles(dirName, file_extension):
     import os
@@ -132,6 +134,9 @@ if __name__ == '__main__':
     from append_functions import append_df_with_size
     csv_data_frame = append_df_with_size(csv_data_frame)
 
+    from append_functions import append_df_with_date
+    csv_data_frame = append_df_with_date(csv_data_frame)
+
     from append_functions import append_recording_system_to_df
     csv_data_frame = append_recording_system_to_df(csv_data_frame)
 
@@ -162,8 +167,8 @@ if __name__ == '__main__':
     from append_functions import append_df_with_rad_dose
     csv_data_frame = append_df_with_rad_dose(csv_data_frame)
 
-    from append_functions import append_df_with_date
-    csv_data_frame = append_df_with_date(csv_data_frame)
+    from append_functions import append_df_with_ar_time
+    csv_data_frame = append_df_with_ar_time(csv_data_frame)
 
     from append_functions import append_df_with_stimulation
     csv_data_frame = append_df_with_stimulation(csv_data_frame)
@@ -179,3 +184,12 @@ if __name__ == '__main__':
     #print(csv_data_frame)
     #norm_csv_path = os.path.normpath(csv_path)
     csv_data_frame.to_csv(csv_path)
+
+    # get the end time
+    et = time.time()
+
+    # get the execution time
+    res = et - st
+    final_res = res / 60
+    print('Execution time:', final_res, 'minutes')
+
