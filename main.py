@@ -2,7 +2,6 @@ import pandas as pd
 import os
 import time
 
-# get the start time
 st = time.time()
 
 def getListOfFiles(dirName, file_extension):
@@ -131,49 +130,52 @@ if __name__ == '__main__':
     csv_path = "C:/Users/Diana/Info_extraction/list_of_files.csv"
 
 
-    from append_functions import append_df_with_size
+    from append_functionsnas import append_df_with_size
     csv_data_frame = append_df_with_size(csv_data_frame)
 
-    from append_functions import append_df_with_date
+    from append_functionsnas import append_df_with_date
     csv_data_frame = append_df_with_date(csv_data_frame)
 
-    from append_functions import append_recording_system_to_df
+    from append_functionsnas import append_recording_system_to_df
     csv_data_frame = append_recording_system_to_df(csv_data_frame)
 
-    from append_functions import append_df_with_culture_type
+    from append_functionsnas import append_df_with_culture_type
     csv_data_frame = append_df_with_culture_type(csv_data_frame)
 
-    from append_functions import append_df_with_cells_kind
+    from append_functionsnas import append_df_with_cells_kind
     csv_data_frame = append_df_with_cells_kind(csv_data_frame)
 
-    from append_functions import append_df_with_div
+    from append_functionsnas import append_df_with_div
     csv_data_frame = append_df_with_div(csv_data_frame)
 
-    from append_functions import append_df_with_labor
+    from append_functionsnas import append_df_with_labor
     csv_data_frame = append_df_with_labor(csv_data_frame)
 
-    from append_functions import append_df_with_performer
+    from append_functionsnas import append_df_with_performer
     csv_data_frame = append_df_with_performer(csv_data_frame)
 
-    from append_functions import append_df_with_drug_application
+    from append_functionsnas import append_df_with_drug_application
     csv_data_frame = append_df_with_drug_application(csv_data_frame)
 
-    from append_functions import append_df_with_drug_dose
+    from append_functionsnas import append_df_with_drug_dose
     csv_data_frame = append_df_with_drug_dose(csv_data_frame)
 
-    from append_functions import append_df_with_radiation
+    from append_functionsnas import append_df_with_radiation
     csv_data_frame = append_df_with_radiation(csv_data_frame)
 
-    from append_functions import append_df_with_rad_dose
+    from append_functionsnas import append_df_with_rad_dose
     csv_data_frame = append_df_with_rad_dose(csv_data_frame)
 
-    from append_functions import append_df_with_ar_time
+    from append_functionsnas import append_df_with_ar_time
     csv_data_frame = append_df_with_ar_time(csv_data_frame)
 
-    from append_functions import append_df_with_stimulation
+    from append_functionsnas import append_df_with_date
+    csv_data_frame = append_df_with_date(csv_data_frame)
+
+    from append_functionsnas import append_df_with_stimulation
     csv_data_frame = append_df_with_stimulation(csv_data_frame)
 
-    from append_functions import append_cleaning_function
+    from append_functionsnas import append_cleaning_function
     csv_data_frame = append_cleaning_function(csv_data_frame)
 
 
@@ -185,11 +187,7 @@ if __name__ == '__main__':
     #norm_csv_path = os.path.normpath(csv_path)
     csv_data_frame.to_csv(csv_path)
 
-    # get the end time
     et = time.time()
-
-    # get the execution time
-    res = et - st
-    final_res = res / 60
-    print('Execution time:', final_res, 'minutes')
-
+    time = et - st
+    final_time = time / 60
+    print("Execution time:", final_time, "minutes")

@@ -1,4 +1,3 @@
-
 import re
 import pandas as pd
 
@@ -17,8 +16,18 @@ def append_recording_system_to_df(df: pd.DataFrame) -> pd.DataFrame:
             Returns a Pandas DataFrame with a new column "Recording System".
         """
 
-    rec_sys_dict = {".brw": "HDMEA", ".dat": "MEA", "": None}
-    df_with_recording_system = pd.DataFrame(df["Format"].map(rec_sys_dict).values, columns=["Recording system"])
+    #rec_sys_list = ["HDMEA", "MEA", "None"]
+
+    list = []
+    for index, row in df["Format"].items():
+        if row == ".brw":
+            list.append("HDMEA")
+        elif row == ".dat":
+            list.append("MEA")
+        else:
+            list.append(None)
+
+    df_with_recording_system = pd.DataFrame(list, columns=["Recording system"])
     df = pd.concat([df, df_with_recording_system], axis=1)
 
     return df
@@ -37,14 +46,15 @@ def append_df_with_culture_type(df: pd.DataFrame) -> pd.DataFrame:
             Returns a Pandas DataFrame with a new column "Culture type".
         """
 
-    neuro = ["Neuro", "neuro", "NS"]
+    neuro = ["Neuro", "neuro", "NS", "ns"]
+
     cardio = ["Cardio", "cardio", "Kardio", "myocytes", "HMZ", "hmz"]
 
     list_of_patterns = [neuro, cardio]
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
-        patterns = '|'.join(pattern)
-        series = df["Location"].str.contains(patterns)
+        pattern = '|'.join(pattern)
+        series = df["Location"].str.contains(pattern)
         series = series.map({True: list_of_patterns[index][0], False: None})
         series_list.append(series)
 
@@ -73,16 +83,16 @@ def append_df_with_cells_kind(df: pd.DataFrame) -> pd.DataFrame:
         """
 
     rat = ["Rat neurons", "Rat cells", "Ratneuronen", "Rat", "rat"]
-    hesc = ["hESC", "human embryonic stem cells", "hES", "human"]
-    ipsc = ["iPSC", "induced pluripotent stem cells", "iPS", "induced"]
+    hesc = ["Human embryonic stem cells", "hESC", "hES", "human"]
+    ipsc = ["Induced pluripotent stem cells", "iPSC", "iPS", "induced"]
     chicken = ["Chicken embryo cardiomyocytes", "Chicken", "chicken", "Hühn", "hühn"]
 
     list_of_patterns = [rat, hesc, ipsc, chicken]
 
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
-        patterns = '|'.join(pattern)
-        series = df["Location"].str.contains(patterns)
+        pattern = '|'.join(pattern)
+        series = df["Location"].str.contains(pattern)
         series = series.map({True: list_of_patterns[index][0], False: None})
         series_list.append(series)
 
@@ -100,51 +110,42 @@ def append_df_with_cells_kind(df: pd.DataFrame) -> pd.DataFrame:
 
 def append_df_with_div(df: pd.DataFrame) -> pd.DataFrame:
     """
-        Appends a column called "DIV" to a given DataFrame
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Data Frame with information about the given Directory.
-        Returns
-        -------
-        df_with_div : pd.DataFrame
-            Returns a Pandas DataFrame with a new column "DIV".
-        """
+    Appends a column called "DIV" to a given DataFrame
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Data Frame with information about the given Directory.
+    Returns
+    -------
+    df_with_div : pd.DataFrame
+        Returns a Pandas DataFrame with a new column "DIV".
+    """
     import re
-    div_patterns = []
 
-    # Define the regular expression pattern
-    pattern = re.compile(r'\d*\W*div\W*\d*', re.IGNORECASE)
-
-    # Loop through the "Location" column and filter out the strings that match the pattern
-    for index in df["Location"]:
-        if pattern.match(str(index)):
-            div_patterns.append(index)
-        else:
-            div_patterns.append(None)
-
-    # Find the closest number to "div" or "DIV" in each matched string
     div = []
-    for div_str in div_patterns:
-        if div_str is not None:
-            # Extract all numbers from the string using regular expressions
-            numbers = re.findall(r'\d+\.?\d*', div_str)
-            # Convert the numbers to floats
-            numbers = [float(n) for n in numbers]
-            # Find the index of "div" or "DIV" in the string
-            div_index = div_str.lower().find("div")
-            if div_index != -1:
-                # Find the number closest to the "div" or "DIV" position
-                closest_num = min(numbers, key=lambda x: abs(numbers.index(x) - div_index))
-                div.append(closest_num)
-            else:
-                div.append(None)
-        else:
-            div.append(None)
+    # Define the regular expression pattern to match DIV or div in different formats
+    pattern = re.compile(
+        r'(\d+)[^\d]*\b(?:DIV|div)[^\d]*(\d+)?|\b(?:DIV|div)[^\d]*(\d+)\b|(\d+)[^\d]*\b(?:DIV|div)\b|(\d+)[^\d]*(?:DIV|div)[^\d]*\b')
+
+    for location in df["Location"]:
+        closest_num = None
+        match = pattern.search(str(location))
+        if match:
+            # Find the closest number to "DIV" or "div"
+            num1 = match.group(1) or match.group(3) or match.group(4) or match.group(5)
+            num2 = match.group(2) or match.group(3)
+            if num2 and abs(match.start(match.group(2)) - match.start(match.group(3))) < abs(
+                    match.start(match.group(1)) - match.end(match.group(1))):
+                closest_num = num2
+            elif num1:
+                closest_num = num1
+        div.append(int(closest_num) if closest_num else None)
 
     df["DIV"] = div
 
     return df
+
+
 
 def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -178,8 +179,8 @@ def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
 
-        patterns = '|'.join(pattern)
-        series = df["Location"].str.contains(patterns)
+        pattern = '|'.join(pattern)
+        series = df["Location"].str.contains(pattern)
         series = series.map({True: list_of_patterns[index][0], False: None})
         series_list.append(series)
 
@@ -218,11 +219,8 @@ def append_df_with_drug_dose(df: pd.DataFrame) -> pd.DataFrame:
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
 
-        # Random sign except zero: ^0    OR  ca*t will match 'ct' (0 'a' characters) OR   \[0-9] except special classes(numbers in this case)
-        #patterns = '0*'+'|'.join(pattern)
-
-        patterns = '|'.join(pattern)
-        series = df["Location"].str.contains(patterns)
+        pattern = '|'.join(pattern)
+        series = df["Location"].str.contains(pattern)
         series = series.map({True: list_of_patterns[index][0], False: None})
         series_list.append(series)
 
@@ -252,7 +250,7 @@ def append_df_with_radiation(df: pd.DataFrame) -> pd.DataFrame:
     rad = ["Radiation", "radiation", "Irradiation", "irradiation", "aR", "a.R.", "Gy", "Strahlung", "Strahl", "strahl"]
     ionizing = ["Ionizing, X-Ray", "X-Ray", "X-ray", "Xray"]
     nonionizing1 = ["Non-ionizing, TETRA", "TETRA"]
-    nonionizing2 = ["Non-ionizing, GSM", "mobile", "GSM"]
+    nonionizing2 = ["Non-ionizing, GSM", "Mobile", "mobile", "GSM"]
 
     list_of_patterns = [rad, ionizing, nonionizing1, nonionizing2]
 
@@ -277,7 +275,7 @@ def append_df_with_radiation(df: pd.DataFrame) -> pd.DataFrame:
 
 def append_df_with_rad_dose(df: pd.DataFrame) -> pd.DataFrame:
     """
-        Appends a column called "Radiation dose" to a given DataFrame
+        Appends a column called "Radiation dose, Gy" to a given DataFrame
         Parameters
         ----------
         df : pd.DataFrame
@@ -285,43 +283,51 @@ def append_df_with_rad_dose(df: pd.DataFrame) -> pd.DataFrame:
         Returns
         -------
         df_with_rad_dose : pd.DataFrame
-            Returns a Pandas DataFrame with a new column "Drug dose".
+            Returns a Pandas DataFrame with a new column "Radiation dose, Gy".
         """
-    import re
-    def closest_num(dose_str):
-        """
-        Returns the number closest to "Gy" in the given string based on position
-        """
-        # Define the regular expression pattern
-        pattern = re.compile(r'\d*\.?\d*\s*Gy')
-
-        # Find all matches in the string
-        matches = pattern.findall(dose_str)
-
-        # Calculate the distance between "Gy" and each match
-        distances = [abs(dose_str.find("Gy") - dose_str.find(m)) for m in matches]
-
-        # Find the index of the match with the smallest distance
-        min_idx = distances.index(min(distances))
-
-        # Extract the number from the matching string and convert to float
-        closest_num = float(re.findall(r'\d+\.?\d*', matches[min_idx])[0])
-
-        return closest_num
+    # Define the regular expression pattern for finding radiation doses
+    pattern = re.compile(r'(\d*\.?\d+)\s*(Gy)')
 
     rad_dose = []
-    # Define the regular expression pattern
-    pattern = re.compile(r'\d*\W*Gy\W*\d*')
 
     # Loop through the "Location" column and find the closest number to "Gy" in each matched string
     for index in df["Location"]:
-        if pattern.match(str(index)):
+        if isinstance(index, str):
+            # Find all matches in the string
+            matches = pattern.findall(index)
+            if matches:
+                # Calculate the distance between "Gy" and each match
+                distances = [abs(index.find("Gy") - index.find(m[1])) for m in matches]
+
+                # Find the index of the match with the smallest distance
+                min_idx = distances.index(min(distances))
+
+                # Extract the number from the matching string and convert to float
+                closest_num_dose = float(matches[min_idx][0])
+
+                rad_dose.append(closest_num_dose)
+            else:
+                rad_dose.append(None)
+        else:
+            rad_dose.append(None)
+
+    df["Radiation dose, Gy"] = rad_dose
+
+    return df
+
+    rad_dose = []
+    # Define the regular expression pattern
+    pattern = re.compile(r'(\d*\W*)Gy')
+
+    # Loop through the "Location" column and find the closest number to "Gy" in each matched string
+    for index in df["Location"]:
+        if pattern.search(str(index)):
             closest_num_val = closest_num(index)
             rad_dose.append(closest_num_val)
         else:
             rad_dose.append(None)
 
-    df["Radiation dose"] = rad_dose
+    df["Radiation dose, Gy"] = rad_dose
 
     return df
 
@@ -338,38 +344,22 @@ def append_df_with_ar_time(df: pd.DataFrame) -> pd.DataFrame:
             Returns a Pandas DataFrame with a new column "Time after radiation, h".
         """
     import re
-    art_patterns = []
+
+    ar_times = []
 
     # Define the regular expression pattern
-    pattern = re.compile(r'\d*\W*h\W*\d*', re.IGNORECASE)
+    pattern = re.compile(r'(\d+)\s*[_ ]*[hH]\b')
 
-    # Loop through the "Location" column and filter out the strings that match the pattern
-    for index in df["Location"]:
-        if pattern.match(str(index)):
-            art_patterns.append(index)
+    # Loop through the "Location" column and extract the time value in hours
+    for location in df['Location']:
+        match = pattern.search(str(location))
+        if match:
+            ar_time = int(match.group(1))
         else:
-            art_patterns.append(None)
+            ar_time = None
+        ar_times.append(ar_time)
 
-    # Find the closest number to "h" or "H" in each matched string
-    art = []
-    for art_str in art_patterns:
-        if art_str is not None:
-            # Extract all numbers from the string using regular expressions
-            numbers = re.findall(r'\d+\.?\d*', art_str)
-            # Convert the numbers to floats
-            numbers = [float(n) for n in numbers]
-            # Find the index of "h" or "H" in the string
-            div_index = art_str.lower().find("h")
-            if div_index != -1:
-                # Find the number closest to the "h" or "H" position
-                closest_num = min(numbers, key=lambda x: abs(numbers.index(x) - div_index))
-                art.append(closest_num)
-            else:
-                art.append(None)
-        else:
-            art.append(None)
-
-    df["Time after radiation, h"] = art
+    df['Time after radiation, h'] = ar_times
 
     return df
 
@@ -395,8 +385,8 @@ def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
 
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
-        patterns = '|'.join(pattern)
-        series = df["Location"].str.contains(patterns)
+        pattern = '|'.join(pattern)
+        series = df["Location"].str.contains(pattern)
         series = series.map({True: list_of_patterns[index][0], False: None})
         series_list.append(series)
 
@@ -409,6 +399,70 @@ def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
     list = series_to_one.to_list()
     df_with_labor = pd.DataFrame(list, columns=["Labor"])
     df = pd.concat([df, df_with_labor], axis=1)
+    return df
+
+def append_df_with_date(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Appends a column called "Date" to a given DataFrame
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Data Frame with information about the given Directory.
+        Returns
+        -------
+        df_with_date : pd.DataFrame
+            Returns a Pandas DataFrame with a new column "Date".
+        """
+
+    import re
+    from datetime import datetime
+
+    date_patterns = []
+
+    # Define regular expression patterns for different date formats, including the new pattern for dd-mm-yyyy
+    patterns = [
+        r'\d{1,2}\/\d{1,2}\/\d{4}',  # mm/dd/yyyy
+        r'\d{4}\/\d{1,2}\/\d{1,2}',  # yyyy/mm/dd
+        r'\d{4}\-\d{1,2}\-\d{1,2}',  # yyyy-mm-dd
+        r'\d{1,2}\-\d{1,2}\-\d{4}',  # dd-mm-yyyy
+        r'\d{1,2}\.\d{1,2}\.\d{4}',  # dd.mm.yyyy
+    ]
+
+    # Loop through the "Location" column and filter out the strings that match the pattern
+    for index in df["Location"]:
+        date_pattern = None
+        for pattern in patterns:
+            match = re.search(pattern, str(index))
+            if match:
+                date_pattern = pattern
+                break
+        date_patterns.append(date_pattern)
+
+    # Convert date strings to datetime objects in the "dd.mm.yyyy" format
+    dates = []
+    for pattern, loc in zip(date_patterns, df["Location"]):
+        if pattern:
+            match = re.search(pattern, str(loc))
+            date_str = match.group(0)
+            date_obj = None
+            if pattern == r'\d{1,2}/\d{1,2}/\d{4}':
+                date_obj = datetime.strptime(date_str, '%m/%d/%Y')
+            elif pattern == r'\d{4}/\d{1,2}/\d{1,2}':
+                date_obj = datetime.strptime(date_str, '%Y/%m/%d')
+            elif pattern == r'\d{4}-\d{1,2}-\d{1,2}':
+                date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+            elif pattern == r'\d{1,2}-\d{1,2}-\d{4}' or pattern == r'\d{1,2}\-\d{1,2}\-\d{4}':
+                date_obj = datetime.strptime(date_str, '%d-%m-%Y')
+            elif pattern == r'\d{1,2}\.\d{1,2}\.\d{4}':
+                date_obj = datetime.strptime(date_str, '%d.%m.%Y')
+            if date_obj is not None:
+                dates.append(date_obj.strftime('%d.%m.%Y'))
+            else:
+                dates.append(None)
+        else:
+            dates.append(None)
+
+    df["Date"] = dates
     return df
 
 def append_df_with_stimulation(df: pd.DataFrame) -> pd.DataFrame:
@@ -432,6 +486,7 @@ def append_df_with_stimulation(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
+
 def append_df_with_performer(df: pd.DataFrame) -> pd.DataFrame:
     """
         Appends a column called "Performer" to a given DataFrame
@@ -453,12 +508,12 @@ def append_df_with_performer(df: pd.DataFrame) -> pd.DataFrame:
     bk = ["Berit Körbitzer", "Körbitzer", "körbitzer"]
     tk = ["Tim Köhler", "Köhler", "köhler"]
     sk = ["Steffen Künzinger", "Künziger", "künziger"]
-    pr = ["Pascal Rüde", "Rüde", "rüde"]
+    pr = ["Pascal Rüdel", "Pascal", "Rüdel"]
     tkr = ["Tobias Kraus", "Tobias", "Kraus", "kraus"]
     mc = ["Manuel Ciba", "Ciba", "ciba"]
     nn = ["Nahid Nafez", "Nafez", "nafez"]
     os = ["Oliver Smolin", "Smolin", "smolin"]
-    eaf = ["Enes Aydin Furkan", "Furkan", "furkan", "Enes"]
+    eaf = ["Enes Aydin Furkan", "Furkan", "furkan"]
     mj = ["Melanie Jungblut", "Jungblut"]
     il = ["Ismael Losano", "Losano"]
     nkr = ["Nico Kück", "Kück"]
@@ -469,10 +524,12 @@ def append_df_with_performer(df: pd.DataFrame) -> pd.DataFrame:
     sho = ["Stefan Homes", "Homes"]
     ct = ["Christiane Thielemann", "Thielemann"]
     ca = ["Sebastian Allig", "Allig"]
+    hka = ["Hitesh Kanoia", "Hitesh", "Kanoia"]
+    ksc = ["Karin Schiling", "Karin", "Schiling"]
 
 
-    list_of_patterns = [ad, cn, jf, mm, ps, bk, tk, sk, pr, tkr, mc,
-                        nn, os, eaf, mj, il, nkr, ah, sg, sh, dfl, sho, ct, ca]
+
+    list_of_patterns = [ad, cn, jf, mm, ps, bk, tk, sk, pr, tkr, mc, nn, os, eaf, mj, il, nkr, ah, sg, sh, dfl, sho, ct, ca, hka, ksc]
 
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
@@ -509,74 +566,12 @@ def append_df_with_size(df: pd.DataFrame) -> pd.DataFrame:
     list = []
     for index, row in df.iterrows():
         size = os.path.getsize(row["Location"])*(1/1024)*(1/1024)*(1/1024)
-        #The size is in Gb
+        #size in Gb
         list.append(size)
 
     df_with_size = pd.DataFrame(list, columns=["Size"])
     df = pd.concat([df, df_with_size], axis=1)
 
-    return df
-
-
-def append_df_with_date(df: pd.DataFrame) -> pd.DataFrame:
-    """
-        Appends a column called "Date" to a given DataFrame
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Data Frame with information about the given Directory.
-        Returns
-        -------
-        df_with_date : pd.DataFrame
-            Returns a Pandas DataFrame with a new column "Date".
-        """
-
-    import re
-    from datetime import datetime
-
-    date_patterns = []
-
-    # Define regular expression patterns for different date formats
-    patterns = [
-        r'\d{1,2}/\d{1,2}/\d{4}',  # mm/dd/yyyy
-        r'\d{4}/\d{1,2}/\d{1,2}',  # yyyy/mm/dd
-        r'\d{4}-\d{1,2}-\d{1,2}',  # yyyy-mm-dd
-        r'\d{1,2}\-\d{1,2}\-\d{4}',  # dd-mm-yyyy
-    ]
-
-    # Loop through the "Location" column and filter out the strings that match the pattern
-    for index in df["Location"]:
-        date_pattern = None
-        for pattern in patterns:
-            match = re.search(pattern, str(index))
-            if match:
-                date_pattern = pattern
-                break
-        date_patterns.append(date_pattern)
-
-    # Convert date strings to datetime objects in the "yyyy-mm-dd" format
-    dates = []
-    for pattern, loc in zip(date_patterns, df["Location"]):
-        if pattern:
-            match = re.search(pattern, str(loc))
-            date_str = match.group(0)
-            date_obj = None
-            if pattern == r'\d{1,2}/\d{1,2}/\d{4}':
-                date_obj = datetime.strptime(date_str, '%m/%d/%Y')
-            elif pattern == r'\d{4}/\d{1,2}/\d{1,2}':
-                date_obj = datetime.strptime(date_str, '%Y/%m/%d')
-            elif pattern == r'\d{4}-\d{1,2}-\d{1,2}':
-                date_obj = datetime.strptime(date_str, '%Y-%m-%d')
-            elif pattern == r'\d{1,2}-\d{1,2}-\d{4}':
-                date_obj = datetime.strptime(date_str, '%d-%m-%Y')
-            if date_obj is not None:
-                dates.append(date_obj.strftime('%Y-%m-%d'))
-            else:
-                dates.append(None)
-        else:
-            dates.append(None)
-
-    df["Date"] = dates
     return df
 
 def append_cleaning_function(df: pd.DataFrame) -> pd.DataFrame:
@@ -605,32 +600,28 @@ def append_cleaning_function(df: pd.DataFrame) -> pd.DataFrame:
 
     #If recording system was not identified
     for index, row in df.iterrows():
-        if row["Recording system"] == None:
+        if row["Recording system"] is None:
             df = df.drop(index=index)
             df = df.reset_index(drop=True)
 
     return df
 
+
 def copy_files_with_conditions(df, path):
     import shutil
+    import os
     df = df[df["Drug application"] == 'Bicuculline']
     df = df[df["Recording system"] == "MEA"]
     df = df[df["Format"] == ".dat"]
-    df = df[df["Drug dose"] == "10 microM"]
+    #df = df[df["Drug dose"] == "10 microM"]
     #df = df[df["Size"] < 1.4]
-    #df = df[df["Size"] > 1.3]
+    df = df[df["Size"] > 1.3]
 
-    print('Number of bicuculline files with chosen parameters:', len(df.index))
-
-    return df
-
-    """for row in df.iterrows():
+    for row in df.iterrows():
         original_file_path = row[1]["Location"]
         file_name = os.path.basename(original_file_path)
         path_to_copy = os.path.join(path, file_name)
         new_file_path = os.path.normpath(path_to_copy)
         shutil.copyfile(original_file_path, new_file_path)
         csv_file_path = os.path.join(path, "info.csv")
-        df.to_csv(csv_file_path)"""
-
-
+        df.to_csv(csv_file_path)
