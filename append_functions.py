@@ -527,7 +527,7 @@ def append_df_with_date(df: pd.DataFrame) -> pd.DataFrame:
             Data Frame with information about the given Directory.
         Returns
         -------
-        df_with_stimulation : pd.DataFrame
+        df_with_date : pd.DataFrame
             Returns a Pandas DataFrame with a new column "Date".
         """
 
@@ -569,7 +569,10 @@ def append_df_with_date(df: pd.DataFrame) -> pd.DataFrame:
                 date_obj = datetime.strptime(date_str, '%Y-%m-%d')
             elif pattern == r'\d{1,2}-\d{1,2}-\d{4}':
                 date_obj = datetime.strptime(date_str, '%d-%m-%Y')
-            dates.append(date_obj.strftime('%Y-%m-%d'))
+            if date_obj is not None:
+                dates.append(date_obj.strftime('%Y-%m-%d'))
+            else:
+                dates.append(None)
         else:
             dates.append(None)
 
