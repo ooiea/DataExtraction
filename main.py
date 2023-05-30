@@ -130,52 +130,55 @@ if __name__ == '__main__':
     csv_path = "C:/Users/Diana/Info_extraction/list_of_files.csv"
 
 
-    from append_functionsnas import append_df_with_size
+    from append_functions import append_df_with_size
     csv_data_frame = append_df_with_size(csv_data_frame)
 
-    from append_functionsnas import append_df_with_date
-    csv_data_frame = append_df_with_date(csv_data_frame)
+    #from append_functions import append_df_with_date
+    #csv_data_frame = append_df_with_date(csv_data_frame)
 
-    from append_functionsnas import append_recording_system_to_df
+    from append_functions import append_df_with_date_and_time
+    csv_data_frame = append_df_with_date_and_time(csv_data_frame)
+
+    from append_functions import append_recording_system_to_df
     csv_data_frame = append_recording_system_to_df(csv_data_frame)
 
-    from append_functionsnas import append_df_with_culture_type
+    from append_functions import append_df_with_culture_type
     csv_data_frame = append_df_with_culture_type(csv_data_frame)
 
-    from append_functionsnas import append_df_with_cells_kind
+    from append_functions import append_df_with_cells_kind
     csv_data_frame = append_df_with_cells_kind(csv_data_frame)
 
-    from append_functionsnas import append_df_with_div
+    from append_functions import append_df_with_div
     csv_data_frame = append_df_with_div(csv_data_frame)
 
-    from append_functionsnas import append_df_with_labor
+    from append_functions import append_df_with_labor
     csv_data_frame = append_df_with_labor(csv_data_frame)
 
-    from append_functionsnas import append_df_with_performer
+    from append_functions import append_df_with_performer
     csv_data_frame = append_df_with_performer(csv_data_frame)
 
-    from append_functionsnas import append_df_with_drug_application
+    from append_functions import append_df_with_drug_application
     csv_data_frame = append_df_with_drug_application(csv_data_frame)
 
-    from append_functionsnas import append_df_with_drug_dose
+    from append_functions import append_df_with_drug_dose
     csv_data_frame = append_df_with_drug_dose(csv_data_frame)
 
-    from append_functionsnas import append_df_with_radiation
+    from append_functions import append_df_with_radiation
     csv_data_frame = append_df_with_radiation(csv_data_frame)
 
-    from append_functionsnas import append_df_with_rad_dose
+    from append_functions import append_df_with_rad_dose
     csv_data_frame = append_df_with_rad_dose(csv_data_frame)
 
-    from append_functionsnas import append_df_with_ar_time
+    from append_functions import append_df_with_ar_time
     csv_data_frame = append_df_with_ar_time(csv_data_frame)
 
-    from append_functionsnas import append_df_with_date
+    from append_functions import append_df_with_date
     csv_data_frame = append_df_with_date(csv_data_frame)
 
-    from append_functionsnas import append_df_with_stimulation
+    from append_functions import append_df_with_stimulation
     csv_data_frame = append_df_with_stimulation(csv_data_frame)
 
-    from append_functionsnas import append_cleaning_function
+    from append_functions import append_cleaning_function
     csv_data_frame = append_cleaning_function(csv_data_frame)
 
 

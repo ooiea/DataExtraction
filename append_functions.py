@@ -123,7 +123,7 @@ def append_df_with_div(df: pd.DataFrame) -> pd.DataFrame:
     import re
 
     div = []
-    # Define the regular expression pattern to match DIV or div in different formats
+    # Defining the regular expression pattern to match DIV or div in different formats
     pattern = re.compile(
         r'(\d+)[^\d]*\b(?:DIV|div)[^\d]*(\d+)?|\b(?:DIV|div)[^\d]*(\d+)\b|(\d+)[^\d]*\b(?:DIV|div)\b|(\d+)[^\d]*(?:DIV|div)[^\d]*\b')
 
@@ -131,7 +131,7 @@ def append_df_with_div(df: pd.DataFrame) -> pd.DataFrame:
         closest_num = None
         match = pattern.search(str(location))
         if match:
-            # Find the closest number to "DIV" or "div"
+            # Finding the closest number to "DIV" or "div"
             num1 = match.group(1) or match.group(3) or match.group(4) or match.group(5)
             num2 = match.group(2) or match.group(3)
             if num2 and abs(match.start(match.group(2)) - match.start(match.group(3))) < abs(
@@ -417,9 +417,13 @@ def append_df_with_date(df: pd.DataFrame) -> pd.DataFrame:
     import re
     from datetime import datetime
 
-    date_patterns = []
+    datepattern = r'(?<=Messung)(\d{1,2}\.\d{1,2}\.\d{4})'
+    df["Date"] = df["Location"].str.extract(datepattern)
 
-    # Define regular expression patterns for different date formats, including the new pattern for dd-mm-yyyy
+    return df
+
+    """date_patterns = []
+    
     patterns = [
         r'\d{1,2}\/\d{1,2}\/\d{4}',  # mm/dd/yyyy
         r'\d{4}\/\d{1,2}\/\d{1,2}',  # yyyy/mm/dd
@@ -438,7 +442,7 @@ def append_df_with_date(df: pd.DataFrame) -> pd.DataFrame:
                 break
         date_patterns.append(date_pattern)
 
-    # Convert date strings to datetime objects in the "dd.mm.yyyy" format
+    # Converting date strings to datetime objects in the "dd.mm.yyyy" format
     dates = []
     for pattern, loc in zip(date_patterns, df["Location"]):
         if pattern:
@@ -463,7 +467,45 @@ def append_df_with_date(df: pd.DataFrame) -> pd.DataFrame:
             dates.append(None)
 
     df["Date"] = dates
+    return df"""
+
+def append_df_with_date_and_time(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Appends a columns called "Date" and "Time" to a given DataFrame
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Data Frame with information about the given Directory.
+        Returns
+        -------
+        df_with_date_and_time : pd.DataFrame
+            Returns a Pandas DataFrame with a new columns "Date" and "Time".
+        """
+
+    """import re
+    from datetime import datetime
+
+    timepattern = r'(?<=Messung(?:\d{1,2}\.\d{1,2}\.\d{4}_))(\d{2}\-\d{2}\-\d{2})'
+    df["Time"] = df["Location"].str.extract(timepattern)"""
+
+    import re
+
+    pattern = r'Messung(\d{1,2}\.\d{1,2}\.\d{4})_(\d{2}\-\d{2}\-\d{2})'
+
+    df["Date"] = ""
+    df["Time"] = ""
+
+    for index, row in df.iterrows():
+        string = row["Location"]
+        match = re.search(pattern, string)
+        if match:
+            date = match.group(1)
+            time = match.group(2)
+            df.at[index, "Date"] = date
+            df.at[index, "Time"] = time
+
     return df
+
 
 def append_df_with_stimulation(df: pd.DataFrame) -> pd.DataFrame:
     """
