@@ -172,6 +172,9 @@ if __name__ == '__main__':
     from append_functions import append_df_with_stimulation
     csv_data_frame = append_df_with_stimulation(csv_data_frame)
 
+    from append_functions import append_df_with_control
+    csv_data_frame = append_df_with_control(csv_data_frame)
+
     from append_functions import append_cleaning_function
     csv_data_frame = append_cleaning_function(csv_data_frame)
 

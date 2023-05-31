@@ -121,9 +121,8 @@ def append_df_with_div(df: pd.DataFrame) -> pd.DataFrame:
         Returns a Pandas DataFrame with a new column "DIV".
     """
 
-    """import re
-
     div = []
+
     # Defining the regular expression pattern to match DIV or div in different formats
     pattern = re.compile(
         r'(\d+)[^\d]*\b(?:DIV|div)[^\d]*(\d+)?|\b(?:DIV|div)[^\d]*(\d+)\b|(\d+)[^\d]*\b(?:DIV|div)\b|(\d+)[^\d]*(?:DIV|div)[^\d]*\b')
@@ -133,38 +132,21 @@ def append_df_with_div(df: pd.DataFrame) -> pd.DataFrame:
         match = pattern.search(str(location))
         if match:
             # Finding the closest number to "DIV" or "div"
-            num1 = match.group(1) or match.group(3) or match.group(4) or match.group(5)
-            num2 = match.group(2) or match.group(3)
-            if num2 and abs(match.start(match.group(2)) - match.start(match.group(3))) < abs(
-                    match.start(match.group(1)) - match.end(match.group(1))):
-                closest_num = num2
+            groups = match.groups()
+            num1 = next((group for group in groups if group is not None), None)
+            num2 = next((group for group in groups[1:] if group is not None), None)
+            if num1 and num2:
+                num1_index = groups.index(num1)
+                num2_index = groups.index(num2)
+                closest_num = num2 if abs(match.start(num2_index) - match.start(num1_index)) < abs(
+                    match.start(0) - match.end(0)) else num1
             elif num1:
                 closest_num = num1
-        div.append(int(closest_num) if closest_num else None)
-
-    df["DIV"] = div"""
-
-    div = []
-    pattern = re.compile(
-        r'(\d+)[^\d]*\b(?:DIV|div)[^\d]*(\d+)?|\b(?:DIV|div)[^\d]*(\d+)\b|(\d+)[^\d]*\b(?:DIV|div)\b|(\d+)[^\d]*(?:DIV|div)[^\d]*\b')
-
-    for location in df["Location"]:
-        closest_num = None
-        match = pattern.search(str(location))
-        if match:
-            # Finding the closest number to "DIV" or "div"
-            groups = match.groups()
-            num1 = next((num for num in groups if num), None)
-            num2 = groups[1] if groups[1] and abs(match.start(groups[1]) - match.start(groups[2])) < abs(
-                match.start(groups[0]) - match.end(groups[0])) else None
-            closest_num = num2 or num1
-        div.append(int(closest_num) if closest_num else None)
+        div.append(int(closest_num) if closest_num is not None else None)
 
     df["DIV"] = div
 
-
     return df
-
 
 
 def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
@@ -591,6 +573,27 @@ def append_cleaning_function(df: pd.DataFrame) -> pd.DataFrame:
         if row["Recording system"] is None:
             df = df.drop(index=index)
             df = df.reset_index(drop=True)
+
+    return df
+
+def append_df_with_control(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Appends a column called "Control" to a given DataFrame
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Data Frame with information about the given Directory.
+        Returns
+        -------
+        df_with_culture_type : pd.DataFrame
+            Returns a Pandas DataFrame with a new column "Control".
+        """
+
+    control = ["Control", "Kontrol"]
+
+    pattern_contr = '|'.join(control)
+    df["Control"] = df["Location"].str.contains(pattern_contr)
+    df["Control"] = df["Control"].map({True: "Control", False: None})
 
     return df
 
