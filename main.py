@@ -133,9 +133,6 @@ if __name__ == '__main__':
     from append_functions import append_df_with_size
     csv_data_frame = append_df_with_size(csv_data_frame)
 
-    #from append_functions import append_df_with_date
-    #csv_data_frame = append_df_with_date(csv_data_frame)
-
     from append_functions import append_df_with_date_and_time
     csv_data_frame = append_df_with_date_and_time(csv_data_frame)
 
@@ -171,9 +168,6 @@ if __name__ == '__main__':
 
     from append_functions import append_df_with_ar_time
     csv_data_frame = append_df_with_ar_time(csv_data_frame)
-
-    from append_functions import append_df_with_date
-    csv_data_frame = append_df_with_date(csv_data_frame)
 
     from append_functions import append_df_with_stimulation
     csv_data_frame = append_df_with_stimulation(csv_data_frame)
