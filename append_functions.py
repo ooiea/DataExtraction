@@ -3,7 +3,7 @@ import pandas as pd
 
 
 
-def append_recording_system_to_df(df: pd.DataFrame) -> pd.DataFrame:
+def append_df_with_recording_sys(df: pd.DataFrame) -> pd.DataFrame:
     """
         Appends a column called "Recording System" to a given DataFrame
         Parameters
@@ -209,13 +209,13 @@ def append_df_with_drug_dose(df: pd.DataFrame) -> pd.DataFrame:
             Returns a Pandas DataFrame with a new column "Drug dose".
         """
 
-    dose1 = ["10 microM", "10 muM", "-10muM"]
-    dose2 = ["5 microM", "5 muM", "-5muM"]
-    dose3 = ["2 microM", "2 muM", "-2muM"]
-    dose4 = ["1 microM", "1 muM", "-1muM"]
-    dose5 = ["0,5 microM", "0,5 muM", "-05muM"]
-    dose6 = ["0,2 microM", "0,2 muM", "-02muM"]
-    dose7 = ["0,1 microM", "0,1 muM", "-01muM"]
+    dose1 = ["10 µM", "10 microM", "10 muM", "-10muM"]
+    dose2 = ["5 µM", "5 microM", "5 muM", "-5muM"]
+    dose3 = ["2 µM", "2 microM", "2 muM", "-2muM"]
+    dose4 = ["1 µM", "1 microM", "1 muM", "-1muM"]
+    dose5 = ["0,5 µM", "0,5 microM", "0,5 muM", "-05muM"]
+    dose6 = ["0,2 µM", "0,2 microM", "0,2 muM", "-02muM"]
+    dose7 = ["0,1 µM", "0,1 microM", "0,1 muM", "-01muM"]
 
     list_of_patterns = [dose1, dose2, dose3, dose4, dose5, dose6, dose7]
     series_list = []
@@ -287,26 +287,21 @@ def append_df_with_rad_dose(df: pd.DataFrame) -> pd.DataFrame:
         df_with_rad_dose : pd.DataFrame
             Returns a Pandas DataFrame with a new column "Radiation dose, Gy".
         """
-    # Define the regular expression pattern for finding radiation doses
-    pattern = re.compile(r'(\d*\.?\d+)\s*(Gy)')
 
+    pattern = re.compile(r'(\d*\.?\d+)\s*(Gy)')
     rad_dose = []
 
-    # Loop through the "Location" column and find the closest number to "Gy" in each matched string
+
     for index in df["Location"]:
         if isinstance(index, str):
-            # Find all matches in the string
             matches = pattern.findall(index)
             if matches:
-                # Calculate the distance between "Gy" and each match
+                # Calculating the distance between "Gy" and each match
                 distances = [abs(index.find("Gy") - index.find(m[1])) for m in matches]
-
-                # Find the index of the match with the smallest distance
+                # Finding the index of the match with the smallest distance
                 min_idx = distances.index(min(distances))
-
-                # Extract the number from the matching string and convert to float
+                # Extracting the number from the matching string and convert to float
                 closest_num_dose = float(matches[min_idx][0])
-
                 rad_dose.append(closest_num_dose)
             else:
                 rad_dose.append(None)
@@ -317,21 +312,6 @@ def append_df_with_rad_dose(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-    rad_dose = []
-    # Define the regular expression pattern
-    pattern = re.compile(r'(\d*\W*)Gy')
-
-    # Loop through the "Location" column and find the closest number to "Gy" in each matched string
-    for index in df["Location"]:
-        if pattern.search(str(index)):
-            closest_num_val = closest_num(index)
-            rad_dose.append(closest_num_val)
-        else:
-            rad_dose.append(None)
-
-    df["Radiation dose, Gy"] = rad_dose
-
-    return df
 
 def append_df_with_ar_time(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -590,12 +570,142 @@ def append_df_with_control(df: pd.DataFrame) -> pd.DataFrame:
         """
 
     control = ["Control", "Kontrol"]
+    sham = ["Sham", "sham"]
 
-    pattern_contr = '|'.join(control)
-    df["Control"] = df["Location"].str.contains(pattern_contr)
-    df["Control"] = df["Control"].map({True: "Control", False: None})
+    list_of_patterns = [control, sham]
+    series_list = []
+    for index, pattern in enumerate(list_of_patterns):
+        pattern = '|'.join(pattern)
+        series = df["Location"].str.contains(pattern)
+        series = series.map({True: list_of_patterns[index][0], False: None})
+        series_list.append(series)
+
+    series_to_one = series_list[0].combine_first(series_list[1])
+
+    for index in range(len(series_list) - 1):
+        series_to_one = series_to_one.combine_first(series_list[index + 1])
+
+    list = series_to_one.to_list()
+    df_with_control = pd.DataFrame(list, columns=["Control"])
+    df = pd.concat([df, df_with_control], axis=1)
 
     return df
+
+def append_df_with_pitch(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Appends a column called "Pitch, µm" to a given DataFrame
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Data Frame with information about the given Directory.
+        Returns
+        -------
+        df_with_pitch : pd.DataFrame
+            Returns a Pandas DataFrame with a new column "Pitch, µm".
+        """
+
+    pattern = re.compile(r'(\d*\.?\d+)\s*(um)')
+    pitch = []
+
+
+    for index in df["Location"]:
+        if isinstance(index, str):
+            matches = pattern.findall(index)
+            if matches:
+                # Calculating the distance between "Gy" and each match
+                distances = [abs(index.find("um") - index.find(m[1])) for m in matches]
+                # Finding the index of the match with the smallest distance
+                min_idx = distances.index(min(distances))
+                # Extracting the number from the matching string and convert to float
+                closest_num_pitch = float(matches[min_idx][0])
+                pitch.append(closest_num_pitch)
+            else:
+                pitch.append(None)
+        else:
+            pitch.append(None)
+
+    df["Pitch, µm"] = pitch
+
+    return df
+
+def append_df_with_frequency(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Appends a column called "Frequency" to a given DataFrame
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Data Frame with information about the given Directory.
+    Returns
+    -------
+    df_with_frequency : pd.DataFrame
+        Returns a Pandas DataFrame with a new column "Frequency".
+    """
+
+    rate = []
+
+    # Defining the regular expression pattern to match kHz, kH or Hz in different formats
+    pattern = re.compile(
+        r'(\d+)[^\d]*\b(?:kH|kHz|Hz)[^\d]*(\d+)?|\b(?:kH|kHz|Hz)[^\d]*(\d+)\b|(\d+)[^\d]*\b(?:kH|kHz|Hz)\b|(\d+)[^\d]*(?:kH|kHz|Hz)[^\d]*\b')
+
+    for location in df["Location"]:
+        closest_num = None
+        match = pattern.search(str(location))
+        if match:
+            # Finding the closest number to kHz, kH or Hz
+            groups = match.groups()
+            num1 = next((group for group in groups if group is not None), None)
+            num2 = next((group for group in groups[1:] if group is not None), None)
+            if num1 and num2:
+                num1_index = groups.index(num1)
+                num2_index = groups.index(num2)
+                closest_num = num2 if abs(match.start(num2_index) - match.start(num1_index)) < abs(
+                    match.start(0) - match.end(0)) else num1
+            elif num1:
+                closest_num = num1
+        rate.append(int(closest_num) if closest_num is not None else None)
+
+    df["Frequency"] = rate
+
+    return df
+
+def append_df_with_electrode(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Appends a column called "Electrode" to a given DataFrame
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Data Frame with information about the given Directory.
+    Returns
+    -------
+    df_with_electrode : pd.DataFrame
+        Returns a Pandas DataFrame with a new column "Electrode".
+    """
+
+    electrode = []
+
+    pattern = re.compile(
+        r'(\d+)[^\d]*\b(?:Electrode|electrode)[^\d]*(\d+)?|\b(?:Electrode|electrode)[^\d]*(\d+)\b|(\d+)[^\d]*\b(?:Electrode|electrode)\b|(\d+)[^\d]*(?:Electrode|electrode)[^\d]*\b')
+
+    for location in df["Location"]:
+        closest_num = None
+        match = pattern.search(str(location))
+        if match:
+            groups = match.groups()
+            num1 = next((group for group in groups if group is not None), None)
+            num2 = next((group for group in groups[1:] if group is not None), None)
+            if num1 and num2:
+                num1_index = groups.index(num1)
+                num2_index = groups.index(num2)
+                closest_num = num2 if abs(match.start(num2_index) - match.start(num1_index)) < abs(
+                    match.start(0) - match.end(0)) else num1
+            elif num1:
+                closest_num = num1
+        electrode.append(int(closest_num) if closest_num is not None else None)
+
+    df["Electrode"] = electrode
+
+    return df
+
 
 
 def copy_files_with_conditions(df, path):
