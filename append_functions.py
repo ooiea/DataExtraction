@@ -546,13 +546,13 @@ def append_cleaning_function(df: pd.DataFrame) -> pd.DataFrame:
     for index, row in df.iterrows():
         if row["Size"] == 0:
             df = df.drop(index=index)
-            df = df.reset_index(drop=True)
+    df = df.reset_index(drop=True)
 
     #If recording system was not identified
     for index, row in df.iterrows():
         if row["Recording system"] is None:
             df = df.drop(index=index)
-            df = df.reset_index(drop=True)
+    df = df.reset_index(drop=True)
 
     return df
 
