@@ -142,8 +142,8 @@ if __name__ == '__main__':
     from append_functions import append_df_with_pitch
     csv_data_frame = append_df_with_pitch(csv_data_frame)
 
-    from append_functions import append_df_with_frequency
-    csv_data_frame = append_df_with_frequency(csv_data_frame)
+    from append_functions import append_df_with_sampling_rate
+    csv_data_frame = append_df_with_sampling_rate(csv_data_frame)
 
     from append_functions import append_df_with_electrode
     csv_data_frame = append_df_with_electrode(csv_data_frame)
@@ -157,11 +157,11 @@ if __name__ == '__main__':
     from append_functions import append_df_with_div
     csv_data_frame = append_df_with_div(csv_data_frame)
 
-    from append_functions import append_df_with_labor
-    csv_data_frame = append_df_with_labor(csv_data_frame)
-
     from append_functions import append_df_with_performer
     csv_data_frame = append_df_with_performer(csv_data_frame)
+
+    from append_functions import append_df_with_labor
+    csv_data_frame = append_df_with_labor(csv_data_frame)
 
     from append_functions import append_df_with_drug_application
     csv_data_frame = append_df_with_drug_application(csv_data_frame)

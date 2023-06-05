@@ -359,7 +359,7 @@ def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
         """
 
     biomems = ["BioMEMS", "BIOMEMS", "biomems", "Biomems"]
-    japan = ["Tokyo", "tokyo", "Tokio", "tokio", "Japan", "japan"]
+    japan = ["Japan", "japan", "Tokyo", "tokyo", "Tokio", "tokio"]
     gsi = ["GSI", "gsi"]
     france = ["France", "france", "French", "french"]
 
@@ -376,11 +376,25 @@ def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
 
     for index in range(len(series_list) - 1):
         series_to_one = series_to_one.combine_first(series_list[index + 1])
-    #print(series_to_one)
 
     list = series_to_one.to_list()
     df_with_labor = pd.DataFrame(list, columns=["Labor"])
     df = pd.concat([df, df_with_labor], axis=1)
+
+    performer_names = [
+        "Andreas Daus", "Christoph Nick", "Margot Mayer", "Berit Körbitzer", "Tim Köhler",
+        "Steffen Künzinger", "Pascal Rüdel", "Tobias Kraus", "Nahid Nafez", "Ismael Losano",
+        "Nico Kück", "Sebastian Gutsfeld", "Simone Hufgard", "Dennis Flachs",
+        "Christiane Thielemann", "Sebastian Allig", "Hitesh Kanoia", "Karin Schiling",
+        "Wenus Nafez", "Diana Khropost"
+    ]
+
+
+    mask = df["Performer"].isin(performer_names)
+    series_to_one = series_to_one.where(series_to_one.isnull() | mask, "BioMEMS")
+
+    df["Labor"] = series_to_one.combine_first(df["Labor"]).combine_first(df["Labor"].shift())
+
     return df
 
 def append_df_with_date_and_time(df: pd.DataFrame) -> pd.DataFrame:
@@ -452,34 +466,37 @@ def append_df_with_performer(df: pd.DataFrame) -> pd.DataFrame:
 
     ad = ["Andreas Daus", "Daus", "daus"]
     cn = ["Christoph Nick", "Nick", "nick"]
-    jf = ["Johannes Frieß", "Frieß", "frieß"]
+    jf = ["Johannes Frieß", "Frieß", "frieß"] #b and GSI and Darmstadt
     mm = ["Margot Mayer", "Mayer", "mayer"]
-    ps = ["Philipp Steigerwald", "steigerwald"]
+    ps = ["Philipp Steigerwald", "steigerwald"] #?
     bk = ["Berit Körbitzer", "Körbitzer", "körbitzer"]
     tk = ["Tim Köhler", "Köhler", "köhler"]
-    sk = ["Steffen Künzinger", "Künziger", "künziger"]
+    sk = ["Steffen Künzinger", "Künzinger", "künzinger"]
     pr = ["Pascal Rüdel", "Pascal", "Rüdel"]
     tkr = ["Tobias Kraus", "Tobias", "Kraus", "kraus"]
-    mc = ["Manuel Ciba", "Ciba", "ciba"]
-    nn = ["Nahid Nafez", "Nafez", "nafez"]
-    os = ["Oliver Smolin", "Smolin", "smolin"]
-    eaf = ["Enes Aydin Furkan", "Furkan", "furkan"]
-    mj = ["Melanie Jungblut", "Jungblut"]
-    il = ["Ismael Losano", "Losano"]
-    nkr = ["Nico Kück", "Kück"]
-    ah = ["Anja Heselide", "Heselide"]
-    sg = ["Sebastian Gutsfeld", "Gutsfeld"]
-    sh = ["Simone Hufgard", "Hufgard"]
-    dfl = ["Dennis Flachs", "Flachs"]
-    sho = ["Stefan Homes", "Homes"]
-    ct = ["Christiane Thielemann", "Thielemann"]
-    ca = ["Sebastian Allig", "Allig"]
-    hka = ["Hitesh Kanoia", "Hitesh", "Kanoia"]
-    ksc = ["Karin Schiling", "Karin", "Schiling"]
+    mc = ["Manuel Ciba", "Ciba", "ciba"] #b and Tokio and Fr
+    nn = ["Nahid Nafez"]
+    os = ["Oliver Smolin", "Smolin", "smolin"] #b and GSI
+    eaf = ["Enes Aydin Furkan", "Furkan", "furkan"] # b and Wurzburg
+    mj = ["Melanie Jungblut", "Jungblut", "jungblut"] # ?
+    il = ["Ismael Losano", "Losano", "losano"]
+    nkr = ["Nico Kück", "Kück", "kück"]
+    ah = ["Anja Heselich", "Heselich", "heselich"] #b and GSI and Darmstadt
+    sg = ["Sebastian Gutsfeld", "Gutsfeld", "gutsfeld"]
+    sh = ["Simone Hufgard", "Hufgard", "hufgard"]
+    dfl = ["Dennis Flachs", "Flachs", "flachs"]
+    sho = ["Stefan Homes", "Homes", "homes"] #?
+    ct = ["Christiane Thielemann", "Thielemann", "thielemann"]
+    ca = ["Sebastian Allig", "Allig", "allig"]
+    hka = ["Hitesh Kanoia", "Hitesh", "Kanoia", "kanoia"]
+    ksc = ["Karin Schiling", "Karin", "Schiling", "schiling"]
+    wn = ["Wenus Nafez"]
+    dkh = ["Diana Khropost"]
 
 
 
-    list_of_patterns = [ad, cn, jf, mm, ps, bk, tk, sk, pr, tkr, mc, nn, os, eaf, mj, il, nkr, ah, sg, sh, dfl, sho, ct, ca, hka, ksc]
+    list_of_patterns = [ad, cn, jf, mm, ps, bk, tk, sk, pr, tkr, mc, nn, os, eaf, mj, il, nkr, ah, sg, sh, dfl, sho,
+                        ct, ca, hka, ksc, wn, dkh]
 
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
@@ -628,17 +645,17 @@ def append_df_with_pitch(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-def append_df_with_frequency(df: pd.DataFrame) -> pd.DataFrame:
+def append_df_with_sampling_rate(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Appends a column called "Frequency" to a given DataFrame
+    Appends a column called "Sampling rate" to a given DataFrame
     Parameters
     ----------
     df : pd.DataFrame
         Data Frame with information about the given Directory.
     Returns
     -------
-    df_with_frequency : pd.DataFrame
-        Returns a Pandas DataFrame with a new column "Frequency".
+    df_with_sampling_rate : pd.DataFrame
+        Returns a Pandas DataFrame with a new column "Sampling rate".
     """
 
     rate = []
@@ -664,7 +681,7 @@ def append_df_with_frequency(df: pd.DataFrame) -> pd.DataFrame:
                 closest_num = num1
         rate.append(int(closest_num) if closest_num is not None else None)
 
-    df["Frequency"] = rate
+    df["Sampling rate"] = rate
 
     return df
 
