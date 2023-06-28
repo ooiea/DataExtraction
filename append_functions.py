@@ -84,7 +84,7 @@ def append_df_with_cells_kind(df: pd.DataFrame) -> pd.DataFrame:
 
     rat = ["Rat neurons", "Ratneuronen", "Rat", "rat"]
     hesc = ["hESC", "Human embryonic stem cells", "hES"]
-    ipsc = ["iPSC", "Induced pluripotent stem cells", "iPS", "induced"]
+    ipsc = ["iPSC", "Induced pluripotent stem cells", "iPS", "induced", "iCell"]
     chicken = ["Chicken embryo cardiomyocytes", "Chicken", "chicken", "Hühn", "hühn", "Huhn", "huhn"]
     hek = ["HEK", "Human Embryonic Kidney"]
 
@@ -137,9 +137,9 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
         if match_div:
             num1 = match_div.group(1)
             num2 = match_div.group(2)
-            if num2 and abs(match_div.start(2) - match_div.start(1)) < abs(match_div.start(1) - match_div.end(1)):
+            if num2 and int(num2) <= 60:
                 closest_num_div = num2
-            else:
+            elif int(num1) <= 60:
                 closest_num_div = num1
 
         # Finding the closest number for DaP pattern
@@ -147,9 +147,9 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
         if match_dap:
             num1 = match_dap.group(1)
             num2 = match_dap.group(2)
-            if num2 and abs(match_dap.start(2) - match_dap.start(1)) < abs(match_dap.start(1) - match_dap.end(1)):
+            if num2 and int(num2) <= 60:
                 closest_num_dap = num2
-            else:
+            elif int(num1) <= 60:
                 closest_num_dap = num1
 
         if closest_num_div:
@@ -162,7 +162,6 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
     df["DIV / DaP"] = div_dap
 
     return df
-
 
 def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -260,8 +259,8 @@ def append_df_with_drug_dose(df: pd.DataFrame) -> pd.DataFrame:
 
     doses = []
 
-    pattern1 = re.compile(r'(\d+)\D*(?:µM|microM|muM)\D*(\d+)?', re.IGNORECASE)
-    pattern2 = re.compile(r'(\d+)\D*(?:µL|microL|muL)\D*(\d+)?', re.IGNORECASE)
+    pattern1 = re.compile(r'(\d+(?:,\d+)?)\D*(?:µM|microM|muM)\D*(\d+)?', re.IGNORECASE)
+    pattern2 = re.compile(r'(\d+(?:,\d+)?)\D*(?:µL|microL|muL)\D*(\d+)?', re.IGNORECASE)
 
     for location in df["Location"]:
         closest_num1 = None
@@ -269,7 +268,7 @@ def append_df_with_drug_dose(df: pd.DataFrame) -> pd.DataFrame:
 
         match1 = pattern1.search(str(location))
         if match1:
-            num1 = match1.group(1)
+            num1 = match1.group(1).replace('.', ',')
             num2 = match1.group(2)
             if num2 and abs(match1.start(2) - match1.start(1)) < abs(match1.start(1) - match1.end(1)):
                 closest_num1 = num2
@@ -278,7 +277,7 @@ def append_df_with_drug_dose(df: pd.DataFrame) -> pd.DataFrame:
 
         match2 = pattern2.search(str(location))
         if match2:
-            num1 = match2.group(1)
+            num1 = match2.group(1).replace('.', ',')
             num2 = match2.group(2)
             if num2 and abs(match2.start(2) - match2.start(1)) < abs(match2.start(1) - match2.end(1)):
                 closest_num2 = num2
@@ -553,7 +552,7 @@ def append_df_with_performer(df: pd.DataFrame) -> pd.DataFrame:
     ad = ["Andreas Daus", "Daus", "daus"]
     cn = ["Christoph Nick", "Nick", "nick"]
     jf = ["Johannes Frieß", "Frieß", "frieß"] #b and GSI and Darmstadt
-    mm = ["Margot Mayer", "Mayer", "mayer"]
+    mm = ["Margot Mayer", " MM ", "Mayer", "mayer"]
     ps = ["Philipp Steigerwald", "steigerwald"] #?
     bk = ["Berit Körbitzer", "Körbitzer", "körbitzer"]
     tk = ["Tim Köhler", "Köhler", "köhler"]
@@ -672,7 +671,7 @@ def append_df_with_control(df: pd.DataFrame) -> pd.DataFrame:
             Returns a Pandas DataFrame with a new column "Control".
         """
 
-    control = ["Control", "Kontrol"]
+    control = ["Control", "Kontrol", "DMSO"]
     sham = ["Sham", "sham"]
 
     list_of_patterns = [control, sham]
@@ -889,6 +888,35 @@ def append_df_with_laser(df: pd.DataFrame) -> pd.DataFrame:
     pattern_laser = '|'.join(laser)
     df["Laser"] = df["Location"].str.contains(pattern_laser)
     df["Laser"] = df["Laser"].map({True: "Laser", False: None})
+
+    return df
+
+def append_df_with_timeframe(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Appends a column called "Timeframe, s" to a given DataFrame
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Data Frame with information about the given Directory.
+        Returns
+        -------
+        df_with_timeframe : pd.DataFrame
+            Returns a Pandas DataFrame with a new column "Timeframe, s".
+        """
+
+    timeframe = []
+
+    pattern = re.compile(r'(\d+)\s*[_ ]*[s]\b')
+
+    for location in df['Location']:
+        match = pattern.search(str(location))
+        if match:
+            timefr = int(match.group(1))
+        else:
+            timefr = None
+        timeframe.append(timefr)
+
+    df["Timeframe, s"] = timeframe
 
     return df
 
