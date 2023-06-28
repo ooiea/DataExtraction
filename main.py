@@ -154,8 +154,8 @@ if __name__ == '__main__':
     from append_functions import append_df_with_cells_kind
     csv_data_frame = append_df_with_cells_kind(csv_data_frame)
 
-    from append_functions import append_df_with_div
-    csv_data_frame = append_df_with_div(csv_data_frame)
+    from append_functions import append_df_with_div_dap
+    csv_data_frame = append_df_with_div_dap(csv_data_frame)
 
     from append_functions import append_df_with_performer
     csv_data_frame = append_df_with_performer(csv_data_frame)
@@ -175,8 +175,14 @@ if __name__ == '__main__':
     from append_functions import append_df_with_rad_dose
     csv_data_frame = append_df_with_rad_dose(csv_data_frame)
 
-    from append_functions import append_df_with_ar_time
-    csv_data_frame = append_df_with_ar_time(csv_data_frame)
+    from append_functions import append_df_with_br_or_ar_time
+    csv_data_frame = append_df_with_br_or_ar_time(csv_data_frame)
+
+    from append_functions import append_df_with_nano
+    csv_data_frame = append_df_with_nano(csv_data_frame)
+
+    from append_functions import append_df_with_laser
+    csv_data_frame = append_df_with_laser(csv_data_frame)
 
     from append_functions import append_df_with_stimulation
     csv_data_frame = append_df_with_stimulation(csv_data_frame)
@@ -187,15 +193,7 @@ if __name__ == '__main__':
     from append_functions import append_cleaning_function
     csv_data_frame = append_cleaning_function(csv_data_frame)
 
-
-
-    #from append_functions import copy_files_with_conditions
-    #copy_files_with_conditions(csv_data_frame, "C:/Users/Diana/Info_extraction/copy_test")
-
-    #print(csv_data_frame)
-    #norm_csv_path = os.path.normpath(csv_path)
     csv_data_frame.to_csv(csv_path)
-
     et = time.time()
     time = et - st
     final_time = time / 60

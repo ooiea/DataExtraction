@@ -48,7 +48,7 @@ def append_df_with_culture_type(df: pd.DataFrame) -> pd.DataFrame:
 
     neuro = ["Neuro", "neuro", "NS", "ns"]
 
-    cardio = ["Cardio", "cardio", "Kardio", "myocytes", "HMZ", "hmz"]
+    cardio = ["Cardio", "cardio", "Kardio", "myocytes", "CD2", "HMZ", "hmz"]
 
     list_of_patterns = [neuro, cardio]
     series_list = []
@@ -82,12 +82,13 @@ def append_df_with_cells_kind(df: pd.DataFrame) -> pd.DataFrame:
             Returns a Pandas DataFrame with a new column "Cell's kind".
         """
 
-    rat = ["Rat neurons", "Rat cells", "Ratneuronen", "Rat", "rat"]
-    hesc = ["Human embryonic stem cells", "hESC", "hES", "human"]
-    ipsc = ["Induced pluripotent stem cells", "iPSC", "iPS", "induced"]
-    chicken = ["Chicken embryo cardiomyocytes", "Chicken", "chicken", "Hühn", "hühn"]
+    rat = ["Rat neurons", "Ratneuronen", "Rat", "rat"]
+    hesc = ["hESC", "Human embryonic stem cells", "hES"]
+    ipsc = ["iPSC", "Induced pluripotent stem cells", "iPS", "induced"]
+    chicken = ["Chicken embryo cardiomyocytes", "Chicken", "chicken", "Hühn", "hühn", "Huhn", "huhn"]
+    hek = ["HEK", "Human Embryonic Kidney"]
 
-    list_of_patterns = [rat, hesc, ipsc, chicken]
+    list_of_patterns = [rat, hesc, ipsc, chicken, hek]
 
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
@@ -108,43 +109,57 @@ def append_df_with_cells_kind(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-def append_df_with_div(df: pd.DataFrame) -> pd.DataFrame:
+def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Appends a column called "DIV" to a given DataFrame
+    Appends a column called "DIV / DaP" to a given DataFrame
     Parameters
     ----------
     df : pd.DataFrame
         Data Frame with information about the given Directory.
     Returns
     -------
-    df_with_div : pd.DataFrame
-        Returns a Pandas DataFrame with a new column "DIV".
+    df_with_div_dap : pd.DataFrame
+        Returns a Pandas DataFrame with a new column "DIV / DaP".
     """
 
-    div = []
+    div_dap = []
 
-    # Defining the regular expression pattern to match DIV or div in different formats
-    pattern = re.compile(
-        r'(\d+)[^\d]*\b(?:DIV|div)[^\d]*(\d+)?|\b(?:DIV|div)[^\d]*(\d+)\b|(\d+)[^\d]*\b(?:DIV|div)\b|(\d+)[^\d]*(?:DIV|div)[^\d]*\b')
+    # Defining the regular expression patterns for DIV and DaP with numbers
+    div_pattern = re.compile(r'(\d+)\D*(?:div|DIV)\D*(\d+)?', re.IGNORECASE)
+    dap_pattern = re.compile(r'(\d+)\D*(?:dap|DaP|DAP)\D*(\d+)?', re.IGNORECASE)
 
     for location in df["Location"]:
-        closest_num = None
-        match = pattern.search(str(location))
-        if match:
-            # Finding the closest number to "DIV" or "div"
-            groups = match.groups()
-            num1 = next((group for group in groups if group is not None), None)
-            num2 = next((group for group in groups[1:] if group is not None), None)
-            if num1 and num2:
-                num1_index = groups.index(num1)
-                num2_index = groups.index(num2)
-                closest_num = num2 if abs(match.start(num2_index) - match.start(num1_index)) < abs(
-                    match.start(0) - match.end(0)) else num1
-            elif num1:
-                closest_num = num1
-        div.append(int(closest_num) if closest_num is not None else None)
+        closest_num_div = None
+        closest_num_dap = None
 
-    df["DIV"] = div
+        # Finding the closest number for DIV pattern
+        match_div = div_pattern.search(str(location))
+        if match_div:
+            num1 = match_div.group(1)
+            num2 = match_div.group(2)
+            if num2 and abs(match_div.start(2) - match_div.start(1)) < abs(match_div.start(1) - match_div.end(1)):
+                closest_num_div = num2
+            else:
+                closest_num_div = num1
+
+        # Finding the closest number for DaP pattern
+        match_dap = dap_pattern.search(str(location))
+        if match_dap:
+            num1 = match_dap.group(1)
+            num2 = match_dap.group(2)
+            if num2 and abs(match_dap.start(2) - match_dap.start(1)) < abs(match_dap.start(1) - match_dap.end(1)):
+                closest_num_dap = num2
+            else:
+                closest_num_dap = num1
+
+        if closest_num_div:
+            div_dap.append(f"{closest_num_div} DIV")
+        elif closest_num_dap:
+            div_dap.append(f"{closest_num_dap} DaP")
+        else:
+            div_dap.append(None)
+
+    df["DIV / DaP"] = div_dap
 
     return df
 
@@ -163,7 +178,7 @@ def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
         """
 
     #Searching for experiments with "Bicuculline" application
-    bic = ["Bicuculline","bicuculline", "Bic", "bic"]
+    bic = ["Bicuculline","bicuculline", "BIC", "Bic", "bic"]
 
     #Searching for experiments with "Carbamazepine"
     carba = ["Carbamazepine", "carbamazepine", "carba", "Carba"]
@@ -177,7 +192,14 @@ def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
     # Searching for experiments with "Cisplatin"
     cisplatin = ["Cisplatin", "cisplatin"]
 
-    list_of_patterns = [bic, carba, lsd, lev, cisplatin]
+    # Searching for experiments with "Isoproterenol"
+    isoprot = ["Isoproterenol", "isoproterenol"]
+
+    # Searching for experiments with "Amitriptyline"
+    amitript = ['Amitriptyline', "amitriptyline"]
+
+
+    list_of_patterns = [bic, carba, lsd, lev, cisplatin, isoprot, amitript]
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
 
@@ -219,21 +241,59 @@ def append_df_with_drug_dose(df: pd.DataFrame) -> pd.DataFrame:
 
     list_of_patterns = [dose1, dose2, dose3, dose4, dose5, dose6, dose7]
     series_list = []
-    for index, pattern in enumerate(list_of_patterns):
 
+    for index, pattern in enumerate(list_of_patterns):
         pattern = '|'.join(pattern)
-        series = df["Location"].str.contains(pattern)
+        series = df["Location"].str.contains(pattern, case=False)
         series = series.map({True: list_of_patterns[index][0], False: None})
         series_list.append(series)
 
     series_to_one = series_list[0].combine_first(series_list[1])
 
-    for index in range(len(series_list)-1):
-        series_to_one = series_to_one.combine_first(series_list[index+1])
+    for index in range(1, len(series_list)):
+        series_to_one = series_to_one.combine_first(series_list[index])
 
-    list = series_to_one.to_list()
-    df_with_drug_dose = pd.DataFrame(list, columns=["Drug dose"])
+    df_with_drug_dose = pd.DataFrame(series_to_one, columns=["Drug dose"])
     df = pd.concat([df, df_with_drug_dose], axis=1)
+
+    # Part of the function to search for another drug doses
+
+    doses = []
+
+    pattern1 = re.compile(r'(\d+)\D*(?:µM|microM|muM)\D*(\d+)?', re.IGNORECASE)
+    pattern2 = re.compile(r'(\d+)\D*(?:µL|microL|muL)\D*(\d+)?', re.IGNORECASE)
+
+    for location in df["Location"]:
+        closest_num1 = None
+        closest_num2 = None
+
+        match1 = pattern1.search(str(location))
+        if match1:
+            num1 = match1.group(1)
+            num2 = match1.group(2)
+            if num2 and abs(match1.start(2) - match1.start(1)) < abs(match1.start(1) - match1.end(1)):
+                closest_num1 = num2
+            else:
+                closest_num1 = num1
+
+        match2 = pattern2.search(str(location))
+        if match2:
+            num1 = match2.group(1)
+            num2 = match2.group(2)
+            if num2 and abs(match2.start(2) - match2.start(1)) < abs(match2.start(1) - match2.end(1)):
+                closest_num2 = num2
+            else:
+                closest_num2 = num1
+
+        if closest_num1:
+            doses.append(f"{closest_num1} µM")
+        elif closest_num2:
+            doses.append(f"{closest_num2} µL")
+        else:
+            doses.append(None)
+
+    df["Drug dose"] = doses
+
     return df
 
 def append_df_with_radiation(df: pd.DataFrame) -> pd.DataFrame:
@@ -250,11 +310,12 @@ def append_df_with_radiation(df: pd.DataFrame) -> pd.DataFrame:
         """
 
     rad = ["Radiation", "radiation", "Irradiation", "irradiation", "aR", "a.R.", "Gy", "Strahlung", "Strahl", "strahl"]
-    ionizing = ["Ionizing, X-Ray", "X-Ray", "X-ray", "Xray"]
+    ionizing1 = ["Ionizing, X-Ray", "X-Ray", "X-ray", "Xray", "XRay"]
+    ionizing2 = ["Ionizing, heavy ions", " Ti ", " C ", " Fe ", " Ca "]
     nonionizing1 = ["Non-ionizing, TETRA", "TETRA"]
     nonionizing2 = ["Non-ionizing, GSM", "Mobile", "mobile", "GSM"]
 
-    list_of_patterns = [rad, ionizing, nonionizing1, nonionizing2]
+    list_of_patterns = [rad, ionizing1, ionizing2, nonionizing1, nonionizing2]
 
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
@@ -313,35 +374,58 @@ def append_df_with_rad_dose(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def append_df_with_ar_time(df: pd.DataFrame) -> pd.DataFrame:
+def append_df_with_br_or_ar_time(df: pd.DataFrame) -> pd.DataFrame:
     """
-        Appends a column called "Time after radiation, h" to a given DataFrame
+        Appends a column called "Time before or after radiation" to a given DataFrame
         Parameters
         ----------
         df : pd.DataFrame
             Data Frame with information about the given Directory.
         Returns
         -------
-        df_with_ar_time : pd.DataFrame
-            Returns a Pandas DataFrame with a new column "Time after radiation, h".
+        df_with_br_or_ar_time : pd.DataFrame
+            Returns a Pandas DataFrame with a new column "Time before or after radiation".
         """
     import re
 
-    ar_times = []
+    time = []
 
-    # Define the regular expression pattern
-    pattern = re.compile(r'(\d+)\s*[_ ]*[hH]\b')
+    br_pattern = re.compile(r'(\d+)\D*(?:h bR|h b.R.|h vor Bestrahlung|m bR|m b.R.|m vor Bestrahlung|d bR|d b.R.|d vor Bestrahlung)\D*(\d+)?', re.IGNORECASE)
+    ar_pattern = re.compile(r'(\d+)\D*(?:h aR|h a.R.|h nach Bestrahlung|m aR|m a.R.|m nach Bestrahlung|d aR|d a.R.|d nach Bestrahlung)\D*(\d+)?', re.IGNORECASE)
 
-    # Loop through the "Location" column and extract the time value in hours
-    for location in df['Location']:
-        match = pattern.search(str(location))
-        if match:
-            ar_time = int(match.group(1))
+    for location in df["Location"]:
+        closest_num_br = None
+        closest_num_ar = None
+
+        # Finding the closest number for br_pattern
+        match_br = br_pattern.search(str(location))
+        if match_br:
+            num1 = match_br.group(1)
+            num2 = match_br.group(2)
+            if num2 and abs(match_br.start(2) - match_br.start(1)) < abs(match_br.start(1) - match_br.end(1)):
+                closest_num_br = num2
+            else:
+                closest_num_br = num1
+
+        # Finding the closest number for ar_pattern
+        match_ar = ar_pattern.search(str(location))
+        if match_ar:
+            num1 = match_ar.group(1)
+            num2 = match_ar.group(2)
+            if num2 and abs(match_ar.start(2) - match_ar.start(1)) < abs(match_ar.start(1) - match_ar.end(1)):
+                closest_num_ar = num2
+            else:
+                closest_num_ar = num1
+
+        if closest_num_br:
+            time.append(f"{closest_num_br} h b.R.")
+        elif closest_num_ar:
+            time.append(f"{closest_num_ar} h a.R.")
         else:
-            ar_time = None
-        ar_times.append(ar_time)
+            time.append(None)
 
-    df['Time after radiation, h'] = ar_times
+
+    df['Time before or after radiation'] = time
 
     return df
 
@@ -358,12 +442,14 @@ def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
             Returns a Pandas DataFrame with a new column "Labor".
         """
 
-    biomems = ["BioMEMS", "BIOMEMS", "biomems", "Biomems"]
+
+    biomems = ["BioMEMS Lab", "BioMEMS", "BIOMEMS", "biomems", "Biomems"]
     japan = ["Japan", "japan", "Tokyo", "tokyo", "Tokio", "tokio"]
     gsi = ["GSI", "gsi"]
     france = ["France", "france", "French", "french"]
 
     list_of_patterns = [biomems, japan, gsi, france]
+
 
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
@@ -389,13 +475,13 @@ def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
         "Wenus Nafez", "Diana Khropost"
     ]
 
-
     mask = df["Performer"].isin(performer_names)
-    series_to_one = series_to_one.where(series_to_one.isnull() | mask, "BioMEMS")
 
-    df["Labor"] = series_to_one.combine_first(df["Labor"]).combine_first(df["Labor"].shift())
+    # Update the last part to save "BioMEMS Lab" where pattern from performer_names was found and the "Labor" is None
+    df.loc[mask & df["Labor"].isnull(), "Labor"] = "BioMEMS Lab"
 
     return df
+
 
 def append_df_with_date_and_time(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -536,7 +622,7 @@ def append_df_with_size(df: pd.DataFrame) -> pd.DataFrame:
         #size in Gb
         list.append(size)
 
-    df_with_size = pd.DataFrame(list, columns=["Size"])
+    df_with_size = pd.DataFrame(list, columns=["Size, Gb"])
     df = pd.concat([df, df_with_size], axis=1)
 
     return df
@@ -561,7 +647,7 @@ def append_cleaning_function(df: pd.DataFrame) -> pd.DataFrame:
 
     #If size = 0
     for index, row in df.iterrows():
-        if row["Size"] == 0:
+        if row["Size, Gb"] == 0:
             df = df.drop(index=index)
     df = df.reset_index(drop=True)
 
@@ -661,25 +747,50 @@ def append_df_with_sampling_rate(df: pd.DataFrame) -> pd.DataFrame:
     rate = []
 
     # Defining the regular expression pattern to match kHz, kH or Hz in different formats
-    pattern = re.compile(
-        r'(\d+)[^\d]*\b(?:kH|kHz|Hz)[^\d]*(\d+)?|\b(?:kH|kHz|Hz)[^\d]*(\d+)\b|(\d+)[^\d]*\b(?:kH|kHz|Hz)\b|(\d+)[^\d]*(?:kH|kHz|Hz)[^\d]*\b')
+    pattern1 = re.compile(r'(\d+)\D*(?:kHz|kH)\D*(\d+)?', re.IGNORECASE)
+    pattern2 = re.compile(r'(\d+)\D*(?:Hz)\D*(\d+)?', re.IGNORECASE)
+    pattern3 = re.compile(r'(\d+)\D*(?:MHz)\D*(\d+)?', re.IGNORECASE)
 
     for location in df["Location"]:
-        closest_num = None
-        match = pattern.search(str(location))
-        if match:
-            # Finding the closest number to kHz, kH or Hz
-            groups = match.groups()
-            num1 = next((group for group in groups if group is not None), None)
-            num2 = next((group for group in groups[1:] if group is not None), None)
-            if num1 and num2:
-                num1_index = groups.index(num1)
-                num2_index = groups.index(num2)
-                closest_num = num2 if abs(match.start(num2_index) - match.start(num1_index)) < abs(
-                    match.start(0) - match.end(0)) else num1
-            elif num1:
-                closest_num = num1
-        rate.append(int(closest_num) if closest_num is not None else None)
+        closest_num1 = None
+        closest_num2 = None
+        closest_num3 = None
+
+        match1 = pattern1.search(str(location))
+        if match1:
+            num1 = match1.group(1)
+            num2 = match1.group(2)
+            if num2 and abs(match1.start(2) - match1.start(1)) < abs(match1.start(1) - match1.end(1)):
+                closest_num1 = num2
+            else:
+                closest_num1 = num1
+
+        match2 = pattern2.search(str(location))
+        if match2:
+            num1 = match2.group(1)
+            num2 = match2.group(2)
+            if num2 and abs(match2.start(2) - match2.start(1)) < abs(match2.start(1) - match2.end(1)):
+                closest_num2 = num2
+            else:
+                closest_num2 = num1
+
+        match3 = pattern3.search(str(location))
+        if match3:
+            num1 = match3.group(1)
+            num2 = match3.group(2)
+            if num2 and abs(match3.start(2) - match3.start(1)) < abs(match3.start(1) - match3.end(1)):
+                closest_num3 = num2
+            else:
+                closest_num3 = num1
+
+        if closest_num1:
+            rate.append(f"{closest_num1} kHz")
+        elif closest_num2:
+            rate.append(f"{closest_num2} Hz")
+        elif closest_num3:
+            rate.append(f"{closest_num3} MHz")
+        else:
+            rate.append(None)
 
     df["Sampling rate"] = rate
 
@@ -723,7 +834,63 @@ def append_df_with_electrode(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
+def append_df_with_nano(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Appends a column called "Nanoparticles" to a given DataFrame
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Data Frame with information about the given Directory.
+    Returns
+    -------
+    df_with_nano : pd.DataFrame
+        Returns a Pandas DataFrame with a new column "Nanoparticles".
+    """
 
+    gnr = ["GNR", "gnr", "NanoRods", "nanorods", "Nanorods"]
+    gnp = ["GNP", "GnP", "nanoparticles"]
+
+    list_of_patterns = [gnr, gnp]
+
+    series_list = []
+    for index, pattern in enumerate(list_of_patterns):
+        pattern = '|'.join(pattern)
+        series = df["Location"].str.contains(pattern)
+        series = series.map({True: list_of_patterns[index][0], False: None})
+        series_list.append(series)
+
+    series_to_one = series_list[0].combine_first(series_list[1])
+
+    for index in range(len(series_list) - 1):
+        series_to_one = series_to_one.combine_first(series_list[index + 1])
+    # print(series_to_one)
+
+    list = series_to_one.to_list()
+    df_with_nano = pd.DataFrame(list, columns=["Nanoparticles"])
+    df = pd.concat([df, df_with_nano], axis=1)
+
+    return df
+
+def append_df_with_laser(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Appends a column called "Laser" to a given DataFrame
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Data Frame with information about the given Directory.
+        Returns
+        -------
+        df_with_laser : pd.DataFrame
+            Returns a Pandas DataFrame with a new column "Laser".
+        """
+
+    laser = ["Laser", "laser"]
+
+    pattern_laser = '|'.join(laser)
+    df["Laser"] = df["Location"].str.contains(pattern_laser)
+    df["Laser"] = df["Laser"].map({True: "Laser", False: None})
+
+    return df
 
 def copy_files_with_conditions(df, path):
     import shutil
