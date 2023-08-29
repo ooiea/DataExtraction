@@ -46,9 +46,9 @@ def append_df_with_culture_type(df: pd.DataFrame) -> pd.DataFrame:
             Returns a Pandas DataFrame with a new column "Culture type".
         """
 
-    neuro = ["Neuro", "neuro", "NS", "ns"]
+    neuro = ["Neuro", "neuro", "NS", "Rat", "Ratneuronen"]
 
-    cardio = ["Cardio", "cardio", "Kardio", "myocytes", "CD2", "HMZ", "hmz"]
+    cardio = ["Cardio", "cardio", "Kardio", "myocytes", "CD2", "HMZ", "hmz", "Chicken", "chicken", "Hühn", "hühn", "Huhn", "huhn"]
 
     list_of_patterns = [neuro, cardio]
     series_list = []
@@ -84,11 +84,12 @@ def append_df_with_cells_kind(df: pd.DataFrame) -> pd.DataFrame:
 
     rat = ["Rat neurons", "Ratneuronen", "Rat", "rat"]
     hesc = ["hESC", "Human embryonic stem cells", "hES"]
-    ipsc = ["iPSC", "Induced pluripotent stem cells", "iPS", "induced", "iCell"]
+    ipsc = ["iPSC", "Induced pluripotent stem cells", "iPS", "induced", "iCell", "Smolin", "smolin", "Frieß", "frieß", "Friess", "friess"]
+    hipsc = ["hiPSC", "Human induced pluripotent stem cells", "hiPS"]
     chicken = ["Chicken embryo cardiomyocytes", "Chicken", "chicken", "Hühn", "hühn", "Huhn", "huhn"]
     hek = ["HEK", "Human Embryonic Kidney"]
 
-    list_of_patterns = [rat, hesc, ipsc, chicken, hek]
+    list_of_patterns = [rat, hesc, ipsc, hipsc, chicken, hek]
 
     series_list = []
     for index, pattern in enumerate(list_of_patterns):
@@ -109,6 +110,8 @@ def append_df_with_cells_kind(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
+
+
 def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
     """
     Appends a column called "DIV / DaP" to a given DataFrame
@@ -124,7 +127,6 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
 
     div_dap = []
 
-    # Defining the regular expression patterns for DIV and DaP with numbers
     div_pattern = re.compile(r'(\d+)\D*(?:div|DIV)\D*(\d+)?', re.IGNORECASE)
     dap_pattern = re.compile(r'(\d+)\D*(?:dap|DaP|DAP)\D*(\d+)?', re.IGNORECASE)
 
@@ -133,24 +135,30 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
         closest_num_dap = None
 
         # Finding the closest number for DIV pattern
-        match_div = div_pattern.search(str(location))
+        match_div = div_pattern.findall(str(location))
         if match_div:
-            num1 = match_div.group(1)
-            num2 = match_div.group(2)
-            if num2 and int(num2) <= 60:
-                closest_num_div = num2
-            elif int(num1) <= 60:
-                closest_num_div = num1
+            for num1, num2 in match_div:
+                num1_dist = abs(location.index(num1) - div_pattern.search(location).start(1))
+                num2_dist = abs(location.index(num2) - div_pattern.search(location).start(2)) if num2 else num1_dist + 1
+                if num2 and int(num2) <= 60 and num2_dist < num1_dist:
+                    closest_num_div = num2
+                    break
+                elif int(num1) <= 60:
+                    closest_num_div = num1
+                    break
 
         # Finding the closest number for DaP pattern
-        match_dap = dap_pattern.search(str(location))
+        match_dap = dap_pattern.findall(str(location))
         if match_dap:
-            num1 = match_dap.group(1)
-            num2 = match_dap.group(2)
-            if num2 and int(num2) <= 60:
-                closest_num_dap = num2
-            elif int(num1) <= 60:
-                closest_num_dap = num1
+            for num1, num2 in match_dap:
+                num1_dist = abs(location.index(num1) - dap_pattern.search(location).start(1))
+                num2_dist = abs(location.index(num2) - dap_pattern.search(location).start(2)) if num2 else num1_dist + 1
+                if num2 and int(num2) <= 60 and num2_dist < num1_dist:
+                    closest_num_dap = num2
+                    break
+                elif int(num1) <= 60:
+                    closest_num_dap = num1
+                    break
 
         if closest_num_div:
             div_dap.append(f"{closest_num_div} DIV")
@@ -162,6 +170,9 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
     df["DIV / DaP"] = div_dap
 
     return df
+
+
+
 
 def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -219,16 +230,16 @@ def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
 
 def append_df_with_drug_dose(df: pd.DataFrame) -> pd.DataFrame:
     """
-        Appends a column called "Drug dose" to a given DataFrame
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Data Frame with information about the given Directory.
-        Returns
-        -------
-        df_with_drug_dose : pd.DataFrame
-            Returns a Pandas DataFrame with a new column "Drug dose".
-        """
+    Appends a column called "Drug dose" to a given DataFrame
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Data Frame with information about the given Directory.
+    Returns
+    -------
+    df_with_drug_dose : pd.DataFrame
+        Returns a Pandas DataFrame with a new column "Drug dose".
+    """
 
     dose1 = ["10 µM", "10 microM", "10 muM", "-10muM"]
     dose2 = ["5 µM", "5 microM", "5 muM", "-5muM"]
@@ -262,34 +273,39 @@ def append_df_with_drug_dose(df: pd.DataFrame) -> pd.DataFrame:
     pattern1 = re.compile(r'(\d+(?:,\d+)?)\D*(?:µM|microM|muM)\D*(\d+)?', re.IGNORECASE)
     pattern2 = re.compile(r'(\d+(?:,\d+)?)\D*(?:µL|microL|muL)\D*(\d+)?', re.IGNORECASE)
 
-    for location in df["Location"]:
-        closest_num1 = None
-        closest_num2 = None
-
-        match1 = pattern1.search(str(location))
-        if match1:
-            num1 = match1.group(1).replace('.', ',')
-            num2 = match1.group(2)
-            if num2 and abs(match1.start(2) - match1.start(1)) < abs(match1.start(1) - match1.end(1)):
-                closest_num1 = num2
-            else:
-                closest_num1 = num1
-
-        match2 = pattern2.search(str(location))
-        if match2:
-            num1 = match2.group(1).replace('.', ',')
-            num2 = match2.group(2)
-            if num2 and abs(match2.start(2) - match2.start(1)) < abs(match2.start(1) - match2.end(1)):
-                closest_num2 = num2
-            else:
-                closest_num2 = num1
-
-        if closest_num1:
-            doses.append(f"{closest_num1} µM")
-        elif closest_num2:
-            doses.append(f"{closest_num2} µL")
+    for index, row in df.iterrows():
+        current_dose = row["Drug dose"]
+        if current_dose:
+            doses.append(current_dose)
         else:
-            doses.append(None)
+            location = row["Location"]
+            closest_num1 = None
+            closest_num2 = None
+
+            match1 = pattern1.search(str(location))
+            if match1:
+                num1 = match1.group(1).replace('.', ',')
+                num2 = match1.group(2)
+                if num2 and abs(match1.start(2) - match1.start(1)) < abs(match1.start(1) - match1.end(1)):
+                    closest_num1 = num2
+                else:
+                    closest_num1 = num1
+
+            match2 = pattern2.search(str(location))
+            if match2:
+                num1 = match2.group(1).replace('.', ',')
+                num2 = match2.group(2)
+                if num2 and abs(match2.start(2) - match2.start(1)) < abs(match2.start(1) - match2.end(1)):
+                    closest_num2 = num2
+                else:
+                    closest_num2 = num1
+
+            if closest_num1:
+                doses.append(f"{closest_num1} µM")
+            elif closest_num2:
+                doses.append(f"{closest_num2} µL")
+            else:
+                doses.append(None)
 
     df["Drug dose"] = doses
 
@@ -373,6 +389,7 @@ def append_df_with_rad_dose(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+
 def append_df_with_br_or_ar_time(df: pd.DataFrame) -> pd.DataFrame:
     """
         Appends a column called "Time before or after radiation" to a given DataFrame
@@ -384,45 +401,107 @@ def append_df_with_br_or_ar_time(df: pd.DataFrame) -> pd.DataFrame:
         -------
         df_with_br_or_ar_time : pd.DataFrame
             Returns a Pandas DataFrame with a new column "Time before or after radiation".
-        """
-    import re
+    """
 
     time = []
 
-    br_pattern = re.compile(r'(\d+)\D*(?:h bR|h b.R.|h vor Bestrahlung|m bR|m b.R.|m vor Bestrahlung|d bR|d b.R.|d vor Bestrahlung)\D*(\d+)?', re.IGNORECASE)
-    ar_pattern = re.compile(r'(\d+)\D*(?:h aR|h a.R.|h nach Bestrahlung|m aR|m a.R.|m nach Bestrahlung|d aR|d a.R.|d nach Bestrahlung)\D*(\d+)?', re.IGNORECASE)
+    h_br_pattern = re.compile(r'(\d+)\D*(?:h bR|h b.R.|h vor Bestrahlung)\D*(\d+)?', re.IGNORECASE)
+    d_br_pattern = re.compile(r'(\d+)\D*(?:d bR|d b.R.|d vor Bestrahlung)\D*(\d+)?', re.IGNORECASE)
+    m_br_pattern = re.compile(r'(\d+)\D*(?:m bR|m b.R.|m vor Bestrahlung)\D*(\d+)?', re.IGNORECASE)
+    h_ar_pattern = re.compile(r'(\d+)\D*(?:h aR|h a.R.|h nach Bestrahlung)\D*(\d+)?', re.IGNORECASE)
+    d_ar_pattern = re.compile(r'(\d+)\D*(?:d aR|d a.R.|d nach Bestrahlung)\D*(\d+)?', re.IGNORECASE)
+    m_ar_pattern = re.compile(r'(\d+)\D*(?:m aR|m a.R.|m nach Bestrahlung)\D*(\d+)?', re.IGNORECASE)
+
+    target_pattern = re.compile(r'(\d+d aR|d a.R.|d nach Bestrahlung)\s*a', re.IGNORECASE)
 
     for location in df["Location"]:
-        closest_num_br = None
-        closest_num_ar = None
+        closest_target = None
 
-        # Finding the closest number for br_pattern
-        match_br = br_pattern.search(str(location))
-        if match_br:
-            num1 = match_br.group(1)
-            num2 = match_br.group(2)
-            if num2 and abs(match_br.start(2) - match_br.start(1)) < abs(match_br.start(1) - match_br.end(1)):
-                closest_num_br = num2
+        # Finding the closest target pattern
+        match_target = target_pattern.findall(str(location))
+        if match_target:
+            closest_target = match_target[-1]  # Take the last match
+
+        if closest_target:
+            time.append(closest_target)
+        else:
+            closest_num_h_br = None
+            closest_num_d_br = None
+            closest_num_m_br = None
+            closest_num_h_ar = None
+            closest_num_d_ar = None
+            closest_num_m_ar = None
+
+        # Finding the closest number for h_br_pattern
+        match_h_br = h_br_pattern.search(str(location))
+        if match_h_br:
+            num1 = match_h_br.group(1)
+            num2 = match_h_br.group(2)
+            if num2 and abs(match_h_br.start(2) - match_h_br.start(1)) < abs(match_h_br.start(1) - match_h_br.end(1)):
+                closest_num_h_br = num2
             else:
-                closest_num_br = num1
+                closest_num_h_br = num1
 
-        # Finding the closest number for ar_pattern
-        match_ar = ar_pattern.search(str(location))
-        if match_ar:
-            num1 = match_ar.group(1)
-            num2 = match_ar.group(2)
-            if num2 and abs(match_ar.start(2) - match_ar.start(1)) < abs(match_ar.start(1) - match_ar.end(1)):
-                closest_num_ar = num2
+        match_d_br = d_br_pattern.search(str(location))
+        if match_d_br:
+            num1 = match_d_br.group(1)
+            num2 = match_d_br.group(2)
+            if num2 and abs(match_d_br.start(2) - match_d_br.start(1)) < abs(match_d_br.start(1) - match_d_br.end(1)):
+                closest_num_d_br = num2
             else:
-                closest_num_ar = num1
+                closest_num_d_br = num1
 
-        if closest_num_br:
-            time.append(f"{closest_num_br} h b.R.")
-        elif closest_num_ar:
-            time.append(f"{closest_num_ar} h a.R.")
+        match_m_br = m_br_pattern.search(str(location))
+        if match_m_br:
+            num1 = match_m_br.group(1)
+            num2 = match_m_br.group(2)
+            if num2 and abs(match_m_br.start(2) - match_m_br.start(1)) < abs(match_m_br.start(1) - match_m_br.end(1)):
+                closest_num_m_br = num2
+            else:
+                closest_num_m_br = num1
+
+
+        match_h_ar = h_ar_pattern.search(str(location))
+        if match_h_ar:
+            num1 = match_h_ar.group(1)
+            num2 = match_h_ar.group(2)
+            if num2 and abs(match_h_ar.start(2) - match_h_ar.start(1)) < abs(match_h_ar.start(1) - match_h_ar.end(1)):
+                closest_num_h_ar = num2
+            else:
+                closest_num_h_ar = num1
+
+        match_d_ar = d_ar_pattern.search(str(location))
+        if match_d_ar:
+            num1 = match_d_ar.group(1)
+            num2 = match_d_ar.group(2)
+            if num2 and abs(match_d_ar.start(2) - match_d_ar.start(1)) < abs(match_d_ar.start(1) - match_d_ar.end(1)):
+                closest_num_d_ar = num2
+            else:
+                closest_num_d_ar = num1
+
+        match_m_ar = m_ar_pattern.search(str(location))
+        if match_m_ar:
+            num1 = match_m_ar.group(1)
+            num2 = match_m_ar.group(2)
+            if num2 and abs(match_m_ar.start(2) - match_m_ar.start(1)) < abs(match_m_ar.start(1) - match_m_ar.end(1)):
+                closest_num_m_ar = num2
+            else:
+                closest_num_m_ar = num1
+
+        if closest_num_h_br:
+            time.append(f"{closest_num_h_br} h b.R.")
+        elif closest_num_d_br:
+            time.append(f"{closest_num_d_br} d b.R.")
+        elif closest_num_m_br:
+            time.append(f"{closest_num_m_br} m b.R.")
+        elif closest_num_h_ar:
+            time.append(f"{closest_num_h_ar} h a.R.")
+        elif closest_num_d_ar:
+            time.append(f"{closest_num_d_ar} d a.R.")
+        elif closest_num_m_ar:
+            time.append(f"{closest_num_m_ar} m a.R.")
         else:
             time.append(None)
-
 
     df['Time before or after radiation'] = time
 
@@ -551,8 +630,8 @@ def append_df_with_performer(df: pd.DataFrame) -> pd.DataFrame:
 
     ad = ["Andreas Daus", "Daus", "daus"]
     cn = ["Christoph Nick", "Nick", "nick"]
-    jf = ["Johannes Frieß", "Frieß", "frieß"] #b and GSI and Darmstadt
-    mm = ["Margot Mayer", " MM ", "Mayer", "mayer"]
+    jf = ["Johannes Frieß", "Frieß", "frieß", "Friess", "friess"] #b and GSI and Darmstadt
+    mm = ["Margot Mayer", "MM", "Mayer", "mayer"]
     ps = ["Philipp Steigerwald", "steigerwald"] #?
     bk = ["Berit Körbitzer", "Körbitzer", "körbitzer"]
     tk = ["Tim Köhler", "Köhler", "köhler"]
@@ -745,7 +824,7 @@ def append_df_with_sampling_rate(df: pd.DataFrame) -> pd.DataFrame:
 
     rate = []
 
-    # Defining the regular expression pattern to match kHz, kH or Hz in different formats
+    # Defining the regular expression pattern to match kHz, Hz or MHz in different formats
     pattern1 = re.compile(r'(\d+)\D*(?:kHz|kH)\D*(\d+)?', re.IGNORECASE)
     pattern2 = re.compile(r'(\d+)\D*(?:Hz)\D*(\d+)?', re.IGNORECASE)
     pattern3 = re.compile(r'(\d+)\D*(?:MHz)\D*(\d+)?', re.IGNORECASE)
