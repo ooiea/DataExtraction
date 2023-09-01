@@ -82,7 +82,7 @@ def append_df_with_cells_kind(df: pd.DataFrame) -> pd.DataFrame:
             Returns a Pandas DataFrame with a new column "Cell's kind".
         """
 
-    rat = ["Rat neurons", "Ratneuronen", "Rat", "rat"]
+    rat = ["Rat neurons", "Ratneuronen", "Rat"]
     hesc = ["hESC", "Human embryonic stem cells", "hES"]
     ipsc = ["iPSC", "Induced pluripotent stem cells", "iPS", "induced", "iCell", "Smolin", "smolin", "Frieß", "frieß", "Friess", "friess"]
     hipsc = ["hiPSC", "Human induced pluripotent stem cells", "hiPS"]
@@ -228,6 +228,7 @@ def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
     df = pd.concat([df, df_with_drug_application], axis=1)
     return df
 
+
 def append_df_with_drug_dose(df: pd.DataFrame) -> pd.DataFrame:
     """
     Appends a column called "Drug dose" to a given DataFrame
@@ -250,66 +251,74 @@ def append_df_with_drug_dose(df: pd.DataFrame) -> pd.DataFrame:
     dose7 = ["0,1 µM", "0,1 microM", "0,1 muM", "-01muM"]
 
     list_of_patterns = [dose1, dose2, dose3, dose4, dose5, dose6, dose7]
-    series_list = []
 
-    for index, pattern in enumerate(list_of_patterns):
-        pattern = '|'.join(pattern)
-        series = df["Location"].str.contains(pattern, case=False)
-        series = series.map({True: list_of_patterns[index][0], False: None})
-        series_list.append(series)
+    # Initialize an empty "Drug dose" column
+    df["Drug dose"] = None
 
-    series_to_one = series_list[0].combine_first(series_list[1])
-
-    for index in range(1, len(series_list)):
-        series_to_one = series_to_one.combine_first(series_list[index])
-
-    df_with_drug_dose = pd.DataFrame(series_to_one, columns=["Drug dose"])
-    df = pd.concat([df, df_with_drug_dose], axis=1)
-
-    # Part of the function to search for another drug doses
-
-    doses = []
-
+    # Part of the function to search for patterns
     pattern1 = re.compile(r'(\d+(?:,\d+)?)\D*(?:µM|microM|muM)\D*(\d+)?', re.IGNORECASE)
     pattern2 = re.compile(r'(\d+(?:,\d+)?)\D*(?:µL|microL|muL)\D*(\d+)?', re.IGNORECASE)
 
     for index, row in df.iterrows():
-        current_dose = row["Drug dose"]
-        if current_dose:
-            doses.append(current_dose)
-        else:
-            location = row["Location"]
-            closest_num1 = None
-            closest_num2 = None
+        location = row["Location"]
+        closest_num1 = None
+        closest_num2 = None
 
-            match1 = pattern1.search(str(location))
-            if match1:
-                num1 = match1.group(1).replace('.', ',')
-                num2 = match1.group(2)
-                if num2 and abs(match1.start(2) - match1.start(1)) < abs(match1.start(1) - match1.end(1)):
-                    closest_num1 = num2
-                else:
-                    closest_num1 = num1
+        match1 = pattern1.search(str(location))
+        match2 = pattern2.search(str(location))
 
-            match2 = pattern2.search(str(location))
-            if match2:
-                num1 = match2.group(1).replace('.', ',')
-                num2 = match2.group(2)
-                if num2 and abs(match2.start(2) - match2.start(1)) < abs(match2.start(1) - match2.end(1)):
-                    closest_num2 = num2
-                else:
-                    closest_num2 = num1
+        # Function to calculate the distance considering letters and digits
+        def calculate_distance(match, text):
+            if match:
+                distance = 0
+                for i, (a, b) in enumerate(zip(match.group(), text)):
+                    if a != b:
+                        distance += abs(ord(a) - ord(b))
+                    distance += abs(i - len(match.group()))
+                return distance
+            return float('inf')
 
+        if match1:
+            num1 = match1.group(1).replace(',', '.')
+            num2 = match1.group(2)
+            dist1 = calculate_distance(match1, str(location))
+            if num2 or (not closest_num1) or dist1 < calculate_distance(pattern1.search(str(closest_num1)), str(location)):
+                closest_num1 = f"{float(num1):.1f} µM"
+
+        if match2:
+            num1 = match2.group(1).replace(',', '.')
+            num2 = match2.group(2)
+            dist2 = calculate_distance(match2, str(location))
+            if num2 or (not closest_num2) or dist2 < calculate_distance(pattern2.search(str(closest_num2)), str(location)):
+                closest_num2 = f"{float(num1):.1f} µL"
+
+        # Handle cases where "01" should be treated as "0.1"
+        if not closest_num1 and closest_num2:
+            closest_num1 = closest_num2.replace("01", "0.1")
+
+        # Assign the closest number to the "Drug dose" column
+        if pd.isna(row["Drug dose"]):
             if closest_num1:
-                doses.append(f"{closest_num1} µM")
+                df.at[index, "Drug dose"] = closest_num1
             elif closest_num2:
-                doses.append(f"{closest_num2} µL")
-            else:
-                doses.append(None)
+                df.at[index, "Drug dose"] = closest_num2
 
-    df["Drug dose"] = doses
+    # Continue with additional patterns from list_of_patterns
+    for pattern_set in list_of_patterns:
+        pattern = '|'.join(pattern_set)
+
+        # Search for the pattern and assign if the "Drug dose" column is not filled
+        mask = df["Location"].str.contains(pattern, case=False)
+        df.loc[mask & pd.isna(df["Drug dose"]), "Drug dose"] = pattern_set[0]
 
     return df
+
+
+
+
+
+
+
 
 def append_df_with_radiation(df: pd.DataFrame) -> pd.DataFrame:
     """
