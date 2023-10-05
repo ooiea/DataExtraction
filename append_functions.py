@@ -133,32 +133,50 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
     for location in df["Location"]:
         closest_num_div = None
         closest_num_dap = None
+        last_div_position = -1  # Initialize the position of the last found DIV pattern
+        last_dap_position = -1  # Initialize the position of the last found DAP pattern
 
         # Finding the closest number for DIV pattern
         match_div = div_pattern.findall(str(location))
         if match_div:
             for num1, num2 in match_div:
-                num1_dist = abs(location.find(num1) - location.find('div'))
-                num2_dist = abs(location.find(num2) - location.find('div')) if num2 else num1_dist + 1
-                if num2 and int(num2) <= 60 and num2_dist < num1_dist:
-                    closest_num_div = num2
-                    break
-                elif int(num1) <= 60:
-                    closest_num_div = num1
-                    break
+                num1_position = location.find(num1)
+                num2_position = location.find(num2) if num2 else -1
+
+                # Check if the number has leading zeros
+                if num1[0] != '0':
+                    num1_dist = abs(num1_position - last_div_position)
+                    num2_dist = abs(num2_position - last_div_position) if num2_position >= 0 else num1_dist + 1
+
+                    if num2 and int(num2) <= 60 and num2_dist < num1_dist:
+                        closest_num_div = num2
+                        last_div_position = num2_position
+                        break
+                    elif int(num1) <= 60:
+                        closest_num_div = num1
+                        last_div_position = num1_position
+                        break
 
         # Finding the closest number for DaP pattern
         match_dap = dap_pattern.findall(str(location))
         if match_dap:
             for num1, num2 in match_dap:
-                num1_dist = abs(location.find(num1) - location.find('dap'))
-                num2_dist = abs(location.find(num2) - location.find('dap')) if num2 else num1_dist + 1
-                if num2 and int(num2) <= 60 and num2_dist < num1_dist:
-                    closest_num_dap = num2
-                    break
-                elif int(num1) <= 60:
-                    closest_num_dap = num1
-                    break
+                num1_position = location.find(num1)
+                num2_position = location.find(num2) if num2 else -1
+
+                # Check if the number has leading zeros
+                if num1[0] != '0':
+                    num1_dist = abs(num1_position - last_dap_position)
+                    num2_dist = abs(num2_position - last_dap_position) if num2_position >= 0 else num1_dist + 1
+
+                    if num2 and int(num2) <= 60 and num2_dist < num1_dist:
+                        closest_num_dap = num2
+                        last_dap_position = num2_position
+                        break
+                    elif int(num1) <= 60:
+                        closest_num_dap = num1
+                        last_dap_position = num1_position
+                        break
 
         if closest_num_div:
             div_dap.append(f"{closest_num_div} DIV")
@@ -170,7 +188,6 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
     df["DIV / DAP"] = div_dap
 
     return df
-
 
 
 def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
