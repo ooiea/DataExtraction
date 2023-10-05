@@ -148,14 +148,13 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
                     num1_dist = abs(num1_position - last_div_position)
                     num2_dist = abs(num2_position - last_div_position) if num2_position >= 0 else num1_dist + 1
 
-                    if num2 and int(num2) <= 60 and num2_dist < num1_dist:
+                    # Prioritize the left number
+                    if num2_dist <= num1_dist:
                         closest_num_div = num2
                         last_div_position = num2_position
-                        break
                     elif int(num1) <= 60:
                         closest_num_div = num1
                         last_div_position = num1_position
-                        break
 
         # Finding the closest number for DaP pattern
         match_dap = dap_pattern.findall(str(location))
@@ -169,14 +168,13 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
                     num1_dist = abs(num1_position - last_dap_position)
                     num2_dist = abs(num2_position - last_dap_position) if num2_position >= 0 else num1_dist + 1
 
-                    if num2 and int(num2) <= 60 and num2_dist < num1_dist:
+                    # Prioritize the left number
+                    if num2_dist <= num1_dist:
                         closest_num_dap = num2
                         last_dap_position = num2_position
-                        break
                     elif int(num1) <= 60:
                         closest_num_dap = num1
                         last_dap_position = num1_position
-                        break
 
         if closest_num_div:
             div_dap.append(f"{closest_num_div} DIV")
@@ -188,6 +186,7 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
     df["DIV / DAP"] = div_dap
 
     return df
+
 
 
 def append_df_with_drug_application(df: pd.DataFrame) -> pd.DataFrame:
