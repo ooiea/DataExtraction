@@ -4,109 +4,103 @@ import time
 
 st = time.time()
 
-def getListOfFiles(dirName, file_extension):
-    import os
-    extension_list = []
-    if isinstance(file_extension, str):
-        extension_list.append(file_extension)
-    if isinstance(file_extension, list):
-        extension_list = file_extension
-    if file_extension is None:
-        extension_list = None
-    # create a list of files and subdirectories
-    # names in the given directory
-    listOfFile = os.listdir(dirName)
-    allFiles = list()
-    # Iterate over all the entries
-    for entry in listOfFile:
-        # Create full path
-        fullPath = os.path.join(dirName, entry)
-        # If entry is a directory then get the list of files in this directory
-        if os.path.isdir(fullPath):
-            allFiles = allFiles + getListOfFiles(fullPath, extension_list)
-        else:
-            name, extension = os.path.splitext(fullPath)
-            if extension_list is None:
-                allFiles.append(fullPath)
-            else:
-                if any(extension in s for s in extension_list):
-                    # if extension == file_extension:
-                    allFiles.append(fullPath)
-
-    return allFiles
-
 
 def get_list_of_files(path, file_type):
     """
-        Generates a list with all file path from a given path.
-        Parameters
-        ----------
-        path : string
-            Either a path from a single file or a path of a directory.
-        file_type : string, list of string
-            The extension of the file type which should be taken into account.
-            Can be one or more than one extension.
-        Returns
-        -------
-        list_of_files : list of string
-            Returns the path of files in a chosen directories.
-        """
+    Generates a list with all file paths from a given path.
 
-    import os
+    Parameters:
+    ----------
+    path : str
+        Either a path to a single file or a directory path.
+    file_type : str or list of str
+        The extension(s) of the file(s) to retrieve. Can be a single extension or a list of extensions.
+
+    Returns:
+    -------
+    list_of_files : list of str
+        A list of file paths in the chosen directory and its subdirectories.
+    """
     all_files = []
-    # check if path is a file or directory
+
     if os.path.isdir(path):
-        all_files = getListOfFiles(path, file_type)
+        extension_list = []
+        if isinstance(file_type, str):
+            extension_list.append(file_type)
+        elif isinstance(file_type, list):
+            extension_list = file_type
+
+        list_of_files = os.listdir(path)
+
+        for entry in list_of_files:
+            full_path = os.path.join(path, entry)
+            if os.path.isdir(full_path):
+                all_files.extend(get_list_of_files(full_path, extension_list))
+            else:
+                name, extension = os.path.splitext(full_path)
+                if extension_list is None or any(extension in s for s in extension_list):
+                    all_files.append(full_path)
     else:
         all_files.append(path)
+
     return all_files
 
 
 def create_pandas_df(list_of_files):
     """
-        Generates a list with all file path from a given path.
-        Parameters
-        ----------
-        path : string
-            Either a path from a single file or a path of a directory.
-        file_type : string, list of string
-            The extension of the file type which should be taken into account.
-            Can be one or more than one extension.
-        Returns
-        -------
-        list_of_files : list of string
-            Returns the path of files in a chosen directories.
-        """
+    Generates a Pandas DataFrame from a list of file paths.
 
-    # Extract column "Format" from "Location" column
-    import pandas as pd
-    csv_data_frame = pd.DataFrame(data=list_of_files, index=None, columns=["Location"])
+    Parameters:
+    ----------
+    list_of_files : list of str
+        A list of file paths to be included in the DataFrame.
+
+    Returns:
+    -------
+    df : pandas DataFrame
+        A DataFrame containing the file paths and their corresponding formats.
+    """
+
+    # Extract the file format from each file path and create a DataFrame
+    csv_data_frame = pd.DataFrame(data=list_of_files, columns=["Location"])
     extension_series = csv_data_frame["Location"].apply(func=get_extension)
     extension_df = extension_series.to_frame(name="Format")
     df = pd.concat([csv_data_frame, extension_df], axis=1)
+
     return df
 
 def get_extension(string):
-    import os
+    """
+    Extracts and returns the file extension from a given string.
+
+    Parameters:
+    ----------
+    string : str
+        The input string, typically a file path, from which the extension will be extracted.
+
+    Returns:
+    -------
+    extension : str
+        The extracted file extension (including the dot), or an empty string if not found.
+    """
     return os.path.splitext(string)[1]
 
 
-# Find all the formats in directory by splitting string after the dot
 def get_all_extensions_in_directory(list_of_files):
     """
-        Generates a list with all file formats from a given path.
-        Parameters
-        ----------
-        path : string
-            String with extensions from a path of a directory.
-        file_type : string
-            Can be one or more than one extension.
-        Returns
-        -------
-        list(extensions) : string
-            Returns all the formats in directory by splitting string after the dot.
-        """
+    Generates a list of all file formats found in a given list of file paths.
 
+    Parameters:
+    ----------
+    list_of_files : list of str
+        A list of file paths from which to extract formats.
+
+    Returns:
+    -------
+    list(extensions) : list of str
+        A list containing all the unique file formats present in the list of file paths,
+        extracted by splitting the string after the dot.
+    """
     extensions = set(os.path.splitext(file)[1] for file in list_of_files)
     return list(extensions)
 
@@ -160,8 +154,8 @@ if __name__ == '__main__':
     from append_functions import append_df_with_performer
     csv_data_frame = append_df_with_performer(csv_data_frame)
 
-    from append_functions import append_df_with_labor
-    csv_data_frame = append_df_with_labor(csv_data_frame)
+    from append_functions import append_df_with_lab
+    csv_data_frame = append_df_with_lab(csv_data_frame)
 
     from append_functions import append_df_with_drug_application
     csv_data_frame = append_df_with_drug_application(csv_data_frame)

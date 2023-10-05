@@ -114,7 +114,7 @@ def append_df_with_cells_kind(df: pd.DataFrame) -> pd.DataFrame:
 
 def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Appends a column called "DIV / DaP" to a given DataFrame
+    Appends a column called "DIV / DAP" to a given DataFrame
     Parameters
     ----------
     df : pd.DataFrame
@@ -122,13 +122,13 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     df_with_div_dap : pd.DataFrame
-        Returns a Pandas DataFrame with a new column "DIV / DaP".
+        Returns a Pandas DataFrame with a new column "DIV / DAP".
     """
 
     div_dap = []
 
-    div_pattern = re.compile(r'(\d+)\D*(?:div|DIV)\D*(\d+)?', re.IGNORECASE)
-    dap_pattern = re.compile(r'(\d+)\D*(?:dap|DaP|DAP)\D*(\d+)?', re.IGNORECASE)
+    div_pattern = re.compile(r'(\d+)\s*(?:div|DIV)\s*(\d+)?', re.IGNORECASE)
+    dap_pattern = re.compile(r'(\d+)\s*(?:dap|DaP|DAP)\s*(\d+)?', re.IGNORECASE)
 
     for location in df["Location"]:
         closest_num_div = None
@@ -138,8 +138,8 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
         match_div = div_pattern.findall(str(location))
         if match_div:
             for num1, num2 in match_div:
-                num1_dist = abs(location.index(num1) - div_pattern.search(location).start(1))
-                num2_dist = abs(location.index(num2) - div_pattern.search(location).start(2)) if num2 else num1_dist + 1
+                num1_dist = abs(location.find(num1) - location.find('div'))
+                num2_dist = abs(location.find(num2) - location.find('div')) if num2 else num1_dist + 1
                 if num2 and int(num2) <= 60 and num2_dist < num1_dist:
                     closest_num_div = num2
                     break
@@ -151,8 +151,8 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
         match_dap = dap_pattern.findall(str(location))
         if match_dap:
             for num1, num2 in match_dap:
-                num1_dist = abs(location.index(num1) - dap_pattern.search(location).start(1))
-                num2_dist = abs(location.index(num2) - dap_pattern.search(location).start(2)) if num2 else num1_dist + 1
+                num1_dist = abs(location.find(num1) - location.find('dap'))
+                num2_dist = abs(location.find(num2) - location.find('dap')) if num2 else num1_dist + 1
                 if num2 and int(num2) <= 60 and num2_dist < num1_dist:
                     closest_num_dap = num2
                     break
@@ -163,14 +163,13 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
         if closest_num_div:
             div_dap.append(f"{closest_num_div} DIV")
         elif closest_num_dap:
-            div_dap.append(f"{closest_num_dap} DaP")
+            div_dap.append(f"{closest_num_dap} DAP")
         else:
             div_dap.append(None)
 
-    df["DIV / DaP"] = div_dap
+    df["DIV / DAP"] = div_dap
 
     return df
-
 
 
 
@@ -516,9 +515,9 @@ def append_df_with_br_or_ar_time(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
+def append_df_with_lab(df: pd.DataFrame) -> pd.DataFrame:
     """
-        Appends a column called "Labor" to a given DataFrame
+        Appends a column called "Laboratory" to a given DataFrame
         Parameters
         ----------
         df : pd.DataFrame
@@ -526,7 +525,7 @@ def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
         Returns
         -------
         df_with_drugs_application : pd.DataFrame
-            Returns a Pandas DataFrame with a new column "Labor".
+            Returns a Pandas DataFrame with a new column "Laboratory".
         """
 
 
@@ -551,8 +550,8 @@ def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
         series_to_one = series_to_one.combine_first(series_list[index + 1])
 
     list = series_to_one.to_list()
-    df_with_labor = pd.DataFrame(list, columns=["Labor"])
-    df = pd.concat([df, df_with_labor], axis=1)
+    df_with_lab = pd.DataFrame(list, columns=["Laboratory"])
+    df = pd.concat([df, df_with_lab], axis=1)
 
     performer_names = [
         "Andreas Daus", "Christoph Nick", "Margot Mayer", "Berit Körbitzer", "Tim Köhler",
@@ -564,8 +563,8 @@ def append_df_with_labor(df: pd.DataFrame) -> pd.DataFrame:
 
     mask = df["Performer"].isin(performer_names)
 
-    # Update the last part to save "BioMEMS Lab" where pattern from performer_names was found and the "Labor" is None
-    df.loc[mask & df["Labor"].isnull(), "Labor"] = "BioMEMS Lab"
+    # Update the last part to save "BioMEMS Lab" where pattern from performer_names was found and the "Laboratory" is None
+    df.loc[mask & df["Laboratory"].isnull(), "Laboratory"] = "BioMEMS Lab"
 
     return df
 
