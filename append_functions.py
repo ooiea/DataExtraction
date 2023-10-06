@@ -127,7 +127,7 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
 
     div_dap = []
 
-    div_pattern = re.compile(r'(\d+)\s*(?:div|DIV)\s*(\d+)?', re.IGNORECASE)
+    div_pattern = re.compile(r'(\d+)\s*(?:div|DiV|DIV)\s*(\d+)?', re.IGNORECASE)
     dap_pattern = re.compile(r'(\d+)\s*(?:dap|DaP|DAP)\s*(\d+)?', re.IGNORECASE)
 
     for location in df["Location"]:
@@ -143,8 +143,8 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
                 num1_position = location.find(num1)
                 num2_position = location.find(num2) if num2 else -1
 
-                # Check if the number has leading zeros
-                if num1[0] != '0':
+                # Check if the number is greater than zero, does not have leading zeros, and is less than or equal to 60
+                if num1[0] != '0' and int(num1) > 0 and int(num1) <= 60:
                     num1_dist = abs(num1_position - last_div_position)
                     num2_dist = abs(num2_position - last_div_position) if num2_position >= 0 else num1_dist + 1
 
@@ -156,15 +156,15 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
                         closest_num_div = num1
                         last_div_position = num1_position
 
-        # Finding the closest number for DaP pattern
+        # Finding the closest number for DAP pattern
         match_dap = dap_pattern.findall(str(location))
         if match_dap:
             for num1, num2 in match_dap:
                 num1_position = location.find(num1)
                 num2_position = location.find(num2) if num2 else -1
 
-                # Check if the number has leading zeros
-                if num1[0] != '0':
+                # Check if the number is greater than zero, does not have leading zeros, and is less than or equal to 60
+                if num1[0] != '0' and int(num1) > 0 and int(num1) <= 60:
                     num1_dist = abs(num1_position - last_dap_position)
                     num2_dist = abs(num2_position - last_dap_position) if num2_position >= 0 else num1_dist + 1
 

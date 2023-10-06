@@ -112,9 +112,9 @@ if __name__ == '__main__':
     norm_path = os.path.normpath(path)
     list_of_files = get_list_of_files(norm_path, None)
     #print(list_of_files)
-    print(f"Total Number of files {len(list_of_files)}:")
-    all_extensions = get_all_extensions_in_directory(list_of_files)
-    print(f"All extensions in Working Directory: {all_extensions}")
+    #print(f"Total Number of files {len(list_of_files)}:")
+    #all_extensions = get_all_extensions_in_directory(list_of_files)
+    #print(f"All extensions in Working Directory: {all_extensions}")
     list_of_files = get_list_of_files(norm_path, [".brw", ".dat"])
     print(f"Number of object .brw and .dat: {len(list_of_files)}")
 
