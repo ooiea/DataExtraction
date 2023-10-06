@@ -169,8 +169,11 @@ if __name__ == '__main__':
     from append_functions import append_df_with_rad_dose
     csv_data_frame = append_df_with_rad_dose(csv_data_frame)
 
-    from append_functions import append_df_with_br_or_ar_time
-    csv_data_frame = append_df_with_br_or_ar_time(csv_data_frame)
+    from append_functions import append_df_with_br_time
+    csv_data_frame = append_df_with_br_time(csv_data_frame)
+
+    from append_functions import append_df_with_ar_time
+    csv_data_frame = append_df_with_ar_time(csv_data_frame)
 
     from append_functions import append_df_with_nano
     csv_data_frame = append_df_with_nano(csv_data_frame)

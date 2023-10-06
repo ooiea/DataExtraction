@@ -331,10 +331,6 @@ def append_df_with_drug_dose(df: pd.DataFrame) -> pd.DataFrame:
 
 
 
-
-
-
-
 def append_df_with_radiation(df: pd.DataFrame) -> pd.DataFrame:
     """
         Appends a column called "Radiation" to a given DataFrame
@@ -375,9 +371,11 @@ def append_df_with_radiation(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
+
+
 def append_df_with_rad_dose(df: pd.DataFrame) -> pd.DataFrame:
     """
-        Appends a column called "Radiation dose, Gy" to a given DataFrame
+        Appends a column called "Radiation dose" to a given DataFrame
         Parameters
         ----------
         df : pd.DataFrame
@@ -385,46 +383,42 @@ def append_df_with_rad_dose(df: pd.DataFrame) -> pd.DataFrame:
         Returns
         -------
         df_with_rad_dose : pd.DataFrame
-            Returns a Pandas DataFrame with a new column "Radiation dose, Gy".
+            Returns a Pandas DataFrame with a new column "Radiation dose".
         """
 
     pattern = re.compile(r'(\d*\.?\d+)\s*(Gy)')
     rad_dose = []
 
-
     for index in df["Location"]:
         if isinstance(index, str):
             matches = pattern.findall(index)
             if matches:
-                # Calculating the distance between "Gy" and each match
-                distances = [abs(index.find("Gy") - index.find(m[1])) for m in matches]
-                # Finding the index of the match with the smallest distance
-                min_idx = distances.index(min(distances))
                 # Extracting the number from the matching string and convert to float
-                closest_num_dose = float(matches[min_idx][0])
-                rad_dose.append(closest_num_dose)
+                closest_num_dose = float(matches[0][0])
+                rad_dose.append(f"{closest_num_dose} Gy")
             else:
                 rad_dose.append(None)
         else:
             rad_dose.append(None)
 
-    df["Radiation dose, Gy"] = rad_dose
+    df["Radiation dose"] = rad_dose
 
     return df
 
 
 
-def append_df_with_br_or_ar_time(df: pd.DataFrame) -> pd.DataFrame:
+
+def append_df_with_br_time(df: pd.DataFrame) -> pd.DataFrame:
     """
-        Appends a column called "Time before or after radiation" to a given DataFrame
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Data Frame with information about the given Directory.
-        Returns
-        -------
-        df_with_br_or_ar_time : pd.DataFrame
-            Returns a Pandas DataFrame with a new column "Time before or after radiation".
+    Appends a column called "Time before radiation" to a given DataFrame
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Data Frame with information about the given Directory.
+    Returns
+    -------
+    df_with_br_time : pd.DataFrame
+        Returns a Pandas DataFrame with a new column "Time before radiation".
     """
 
     time = []
@@ -432,29 +426,11 @@ def append_df_with_br_or_ar_time(df: pd.DataFrame) -> pd.DataFrame:
     h_br_pattern = re.compile(r'(\d+)\D*(?:h bR|h b.R.|h vor Bestrahlung)\D*(\d+)?', re.IGNORECASE)
     d_br_pattern = re.compile(r'(\d+)\D*(?:d bR|d b.R.|d vor Bestrahlung)\D*(\d+)?', re.IGNORECASE)
     m_br_pattern = re.compile(r'(\d+)\D*(?:m bR|m b.R.|m vor Bestrahlung)\D*(\d+)?', re.IGNORECASE)
-    h_ar_pattern = re.compile(r'(\d+)\D*(?:h aR|h a.R.|h nach Bestrahlung)\D*(\d+)?', re.IGNORECASE)
-    d_ar_pattern = re.compile(r'(\d+)\D*(?:d aR|d a.R.|d nach Bestrahlung)\D*(\d+)?', re.IGNORECASE)
-    m_ar_pattern = re.compile(r'(\d+)\D*(?:m aR|m a.R.|m nach Bestrahlung)\D*(\d+)?', re.IGNORECASE)
-
-    target_pattern = re.compile(r'(\d+d aR|d a.R.|d nach Bestrahlung)\s*a', re.IGNORECASE)
 
     for location in df["Location"]:
-        closest_target = None
-
-        # Finding the closest target pattern
-        match_target = target_pattern.findall(str(location))
-        if match_target:
-            closest_target = match_target[-1]  # Take the last match
-
-        if closest_target:
-            time.append(closest_target)
-        else:
-            closest_num_h_br = None
-            closest_num_d_br = None
-            closest_num_m_br = None
-            closest_num_h_ar = None
-            closest_num_d_ar = None
-            closest_num_m_ar = None
+        closest_num_h_br = None
+        closest_num_d_br = None
+        closest_num_m_br = None
 
         # Finding the closest number for h_br_pattern
         match_h_br = h_br_pattern.search(str(location))
@@ -484,6 +460,57 @@ def append_df_with_br_or_ar_time(df: pd.DataFrame) -> pd.DataFrame:
             else:
                 closest_num_m_br = num1
 
+        if closest_num_h_br:
+            time.append(f"{closest_num_h_br} h b.R.")
+        elif closest_num_d_br:
+            time.append(f"{closest_num_d_br} d b.R.")
+        elif closest_num_m_br:
+            time.append(f"{closest_num_m_br} m b.R.")
+        else:
+            time.append(None)
+
+    df['Time before radiation'] = time
+
+    return df
+
+
+def append_df_with_ar_time(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Appends a column called "Time after radiation" to a given DataFrame
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Data Frame with information about the given Directory.
+        Returns
+        -------
+        df_with_br_or_ar_time : pd.DataFrame
+            Returns a Pandas DataFrame with a new column "Time after radiation".
+    """
+
+    time = []
+
+    h_ar_pattern = re.compile(r'(\d+)\D*(?:h aR|h a.R.|h nach Bestrahlung)\D*(\d+)?', re.IGNORECASE)
+    d_ar_pattern = re.compile(r'(\d+)\D*(?:d aR|d a.R.|d nach Bestrahlung)\D*(\d+)?', re.IGNORECASE)
+    m_ar_pattern = re.compile(r'(\d+)\D*(?:m aR|m a.R.|m nach Bestrahlung)\D*(\d+)?', re.IGNORECASE)
+
+    target_pattern = re.compile(r'(\d+d aR|d a.R.|d nach Bestrahlung)\s*a', re.IGNORECASE)
+
+    for location in df["Location"]:
+        closest_target = None
+
+        # Finding the closest target pattern
+        match_target = target_pattern.findall(str(location))
+        if match_target:
+            closest_target = match_target[-1]  # Take the last match
+
+        if closest_target:
+            time.append(closest_target)
+        else:
+            closest_num_h_ar = None
+            closest_num_d_ar = None
+            closest_num_m_ar = None
+
+
 
         match_h_ar = h_ar_pattern.search(str(location))
         if match_h_ar:
@@ -512,13 +539,8 @@ def append_df_with_br_or_ar_time(df: pd.DataFrame) -> pd.DataFrame:
             else:
                 closest_num_m_ar = num1
 
-        if closest_num_h_br:
-            time.append(f"{closest_num_h_br} h b.R.")
-        elif closest_num_d_br:
-            time.append(f"{closest_num_d_br} d b.R.")
-        elif closest_num_m_br:
-            time.append(f"{closest_num_m_br} m b.R.")
-        elif closest_num_h_ar:
+
+        if closest_num_h_ar:
             time.append(f"{closest_num_h_ar} h a.R.")
         elif closest_num_d_ar:
             time.append(f"{closest_num_d_ar} d a.R.")
@@ -527,9 +549,13 @@ def append_df_with_br_or_ar_time(df: pd.DataFrame) -> pd.DataFrame:
         else:
             time.append(None)
 
-    df['Time before or after radiation'] = time
+    df['Time after radiation'] = time
 
     return df
+
+
+
+
 
 def append_df_with_lab(df: pd.DataFrame) -> pd.DataFrame:
     """
