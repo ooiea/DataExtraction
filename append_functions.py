@@ -127,7 +127,7 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
 
     div_dap = []
 
-    div_pattern = re.compile(r'(\d+)\s*(?:div|DiV|DIV)\s*(\d+)?', re.IGNORECASE)
+    div_pattern = re.compile(r'(\d+)\s*(?:div|DIV)\s*(\d+)?', re.IGNORECASE)
     dap_pattern = re.compile(r'(\d+)\s*(?:dap|DaP|DAP)\s*(\d+)?', re.IGNORECASE)
 
     for location in df["Location"]:
@@ -150,13 +150,14 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
 
                     # Prioritize the left number
                     if num2_dist <= num1_dist:
-                        closest_num_div = num2
-                        last_div_position = num2_position
+                        if int(num2) > 0 and int(num2) <= 60:  # Check if num2 is valid
+                            closest_num_div = num2
+                            last_div_position = num2_position
                     elif int(num1) <= 60:
                         closest_num_div = num1
                         last_div_position = num1_position
 
-        # Finding the closest number for DAP pattern
+        # Finding the closest number for DaP pattern
         match_dap = dap_pattern.findall(str(location))
         if match_dap:
             for num1, num2 in match_dap:
@@ -170,8 +171,9 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
 
                     # Prioritize the left number
                     if num2_dist <= num1_dist:
-                        closest_num_dap = num2
-                        last_dap_position = num2_position
+                        if int(num2) > 0 and int(num2) <= 60:  # Check if num2 is valid
+                            closest_num_dap = num2
+                            last_dap_position = num2_position
                     elif int(num1) <= 60:
                         closest_num_dap = num1
                         last_dap_position = num1_position
