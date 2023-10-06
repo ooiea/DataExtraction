@@ -144,16 +144,16 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
                 num2_position = location.find(num2) if num2 else -1
 
                 # Check if the number is greater than zero, does not have leading zeros, and is less than or equal to 60
-                if num1[0] != '0' and int(num1) > 0 and int(num1) <= 60:
+                if num1[0] != '0' and int(num1) > 0 and int(num1) < 60:
                     num1_dist = abs(num1_position - last_div_position)
                     num2_dist = abs(num2_position - last_div_position) if num2_position >= 0 else num1_dist + 1
 
                     # Prioritize the left number
                     if num2_dist <= num1_dist:
-                        if int(num2) > 0 and int(num2) <= 60:  # Check if num2 is valid
+                        if int(num2) > 0 and int(num2) < 60:  # Check if num2 is valid
                             closest_num_div = num2
                             last_div_position = num2_position
-                    elif int(num1) <= 60:
+                    elif int(num1) < 60:
                         closest_num_div = num1
                         last_div_position = num1_position
 
@@ -165,16 +165,16 @@ def append_df_with_div_dap(df: pd.DataFrame) -> pd.DataFrame:
                 num2_position = location.find(num2) if num2 else -1
 
                 # Check if the number is greater than zero, does not have leading zeros, and is less than or equal to 60
-                if num1[0] != '0' and int(num1) > 0 and int(num1) <= 60:
+                if num1[0] != '0' and int(num1) > 0 and int(num1) < 60:
                     num1_dist = abs(num1_position - last_dap_position)
                     num2_dist = abs(num2_position - last_dap_position) if num2_position >= 0 else num1_dist + 1
 
                     # Prioritize the left number
                     if num2_dist <= num1_dist:
-                        if int(num2) > 0 and int(num2) <= 60:  # Check if num2 is valid
+                        if int(num2) > 0 and int(num2) < 60:  # Check if num2 is valid
                             closest_num_dap = num2
                             last_dap_position = num2_position
-                    elif int(num1) <= 60:
+                    elif int(num1) < 60:
                         closest_num_dap = num1
                         last_dap_position = num1_position
 
@@ -568,7 +568,7 @@ def append_df_with_lab(df: pd.DataFrame) -> pd.DataFrame:
             Data Frame with information about the given Directory.
         Returns
         -------
-        df_with_drugs_application : pd.DataFrame
+        df_with_lab : pd.DataFrame
             Returns a Pandas DataFrame with a new column "Laboratory".
         """
 
@@ -630,8 +630,8 @@ def append_df_with_date_and_time(df: pd.DataFrame) -> pd.DataFrame:
 
     pattern = r'Messung(\d{1,2}\.\d{1,2}\.\d{4})_(\d{2}\-\d{2}\-\d{2})'
 
-    df["Date"] = ""
-    df["Time"] = ""
+    df["Date"] = None
+    df["Time"] = None
 
     for index, row in df.iterrows():
         string = row["Location"]
@@ -643,7 +643,6 @@ def append_df_with_date_and_time(df: pd.DataFrame) -> pd.DataFrame:
             df.at[index, "Time"] = time
 
     return df
-
 
 def append_df_with_stimulation(df: pd.DataFrame) -> pd.DataFrame:
     """
