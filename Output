@@ -1,0 +1,25 @@
+Parameter's info, extracted into the table
+
+"Recording System": HDMEA; MEA
+"Culture type": Neuro; Cardio
+"Cell's kind": Rat neurons; hESC; iPSC; hiPSC; Chicken embryo cardiomyocytes; HEK
+"DIV / DAP": <60
+"Drug application": Bicuculline; Carbamazepine; LSD; Levetiracetam; Cisplatin; Isoproterenol; Amitriptyline
+"Drug dose": µM; µL
+"Radiation": Radiation; Ionizing, X-Ray; Ionizing, heavy ions; Non-ionizing, TETRA; Non-ionizing, GSM
+"Radiation dose": Gy
+"Time before radiation": h b.R.; d b.R.; m b.R.
+"Time after radiation": h a.R.; d a.R.; m a.R.
+"Laboratory": BioMEMS Lab; Japan; GSI; France
+"Performer": Andreas Daus; Christoph Nick; Johannes Frieß; Margot Mayer; Philipp Steigerwald; Berit Körbitzer; Tim Köhler; Steffen Künzinger; Pascal Rüdel; Tobias Kraus; Manuel Ciba; Nahid Nafez; Oliver Smolin; Enes Aydin Furkan; Melanie Jungblut; Ismael Losano; Nico Kück; Anja Heselich; Sebastian Gutsfeld; Simone Hufgard; Dennis Flachs; Stefan Homes; Christiane Thielemann; Sebastian Allig; Hitesh Kanoia; Karin Schiling; Wenus Nafez; Diana Khropost
+"Date": dd.mm.yyyy
+"Time": hh-mm-ss
+"Stimulation": Stimulation
+"Control": Control; Sham
+"Sampling rate": Hz; kHz; MHz
+"Nanoparticles": GNR; GNP
+"Laser": Laser
+"Timeframe, s": [number]
+"Electrode": [number]
+"Pitch, µm": [number]
+"Size, Gb": [number]
